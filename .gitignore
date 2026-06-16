@@ -1,0 +1,23 @@
+# Xcode / generated project
+*.xcodeproj
+build/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+
+# Swift / SPM
+.swiftpm/
+.build/
+Package.resolved
+
+# macOS
+.DS_Store
+
+# Editor
+*.swp
+*~
+.idea/
+.vscode/
+
+# Claude Code runtime artifacts
+.claude/
