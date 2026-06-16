@@ -2,11 +2,19 @@ import SwiftUI
 
 struct ContentView: View {
 
+    /// Modal surfaces routed through a single `.sheet(item:)`. The parameter
+    /// panel is handled separately via `.inspector` so it can dock as a sidebar
+    /// on iPad. New surfaces (e.g. `.lessons`) slot in here with no structural
+    /// change.
+    enum ActiveSheet: Identifiable {
+        case picker, equations, settings, lessons
+        var id: Self { self }
+    }
+
     @State private var settings = AttractiveSettings.shared
     @State private var canvasSize: CGSize = .zero
-    @State private var showPicker = false
-    @State private var showTune = false
-    @State private var showEquations = false
+    @State private var activeSheet: ActiveSheet?
+    @State private var inspectorVisible = false
 
     var body: some View {
         ZStack {
@@ -36,46 +44,47 @@ struct ContentView: View {
                 controlBar
             }
         }
-        .sheet(isPresented: $showPicker) {
-            AttractorPickerSheet(settings: settings)
-        }
-        .sheet(isPresented: $showTune) {
+        // Parameter panel: a docked inspector on iPad (regular width), an
+        // automatic sheet on iPhone (compact width) — SwiftUI adapts it for us.
+        .inspector(isPresented: $inspectorVisible) {
             ParameterPanel(settings: settings)
+                .inspectorColumnWidth(min: 280, ideal: 340, max: 460)
                 .presentationDetents([.medium, .large])
         }
-        .sheet(isPresented: $showEquations) {
-            EquationView(settings: settings)
+        .sheet(item: $activeSheet) { sheet in
+            switch sheet {
+            case .picker:    AttractorPickerSheet(settings: settings)
+            case .equations: EquationView(settings: settings)
+            case .settings:  SettingsSheet(settings: settings)
+            case .lessons:   EmptyView() // wired in Phase 9
+            }
         }
     }
 
     // MARK: - Control bar
 
     private var controlBar: some View {
-        HStack(spacing: 18) {
+        HStack(spacing: 14) {
+            // Identity anchor.
             controlButton(system: "circle.grid.cross", label: settings.attractor.displayName) {
-                showPicker = true
+                activeSheet = .picker
             }
 
-            controlButton(system: settings.glow ? "sparkles" : "sparkle",
-                          label: settings.glow ? "Glow" : "Flat") {
-                settings.glow.toggle()
-            }
+            Divider().frame(height: 30).overlay(Color.white.opacity(0.15))
 
-            controlButton(system: "paintpalette", label: "Color") {
-                settings.hue = (settings.hue + 0.12).truncatingRemainder(dividingBy: 1.0)
-            }
-
-            controlButton(system: speedIcon, label: speedLabel) {
-                let next = settings.speed >= 2.0 ? 0.5 : settings.speed + 0.5
-                settings.speed = next
-            }
-
+            // Learn cluster.
             controlButton(system: "slider.horizontal.3", label: "Tune") {
-                showTune = true
+                inspectorVisible.toggle()
+            }
+            controlButton(system: "function", label: "Math") {
+                activeSheet = .equations
             }
 
-            controlButton(system: "function", label: "Math") {
-                showEquations = true
+            Divider().frame(height: 30).overlay(Color.white.opacity(0.15))
+
+            // Look cluster.
+            controlButton(system: "paintbrush.pointed", label: "Style") {
+                activeSheet = .settings
             }
         }
         .padding(.horizontal, 16)
@@ -108,14 +117,6 @@ struct ContentView: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
-    }
-
-    private var speedIcon: String {
-        settings.speed < 1.0 ? "tortoise" : (settings.speed > 1.5 ? "hare" : "gauge.medium")
-    }
-
-    private var speedLabel: String {
-        String(format: "%.1f×", settings.speed)
     }
 }
 
