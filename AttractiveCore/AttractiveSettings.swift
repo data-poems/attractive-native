@@ -59,6 +59,11 @@ public final class AttractiveSettings {
     /// keep the JSON write off the hot path).
     public private(set) var paramRevision: Int
 
+    /// Completed lesson ids, persisted as a JSON string array.
+    @ObservationIgnored
+    private var completedLessons: Set<String> { didSet { writeCompletedLessons() } }
+    public private(set) var lessonRevision: Int
+
     // MARK: - Init
 
     private init() {
@@ -82,6 +87,13 @@ public final class AttractiveSettings {
             self.paramOverrides = [:]
         }
         self.paramRevision = 0
+        if let data = suite.data(forKey: Key.completedLessons.rawValue),
+           let decoded = try? JSONDecoder().decode([String].self, from: data) {
+            self.completedLessons = Set(decoded)
+        } else {
+            self.completedLessons = []
+        }
+        self.lessonRevision = 0
     }
 
     // MARK: - Derived
@@ -150,16 +162,48 @@ public final class AttractiveSettings {
         return paramOverrides[attractor.rawValue] != nil
     }
 
+    // MARK: - Lessons
+
+    /// Drive the live view into a lesson step's preset. Sets the attractor first
+    /// so parameter overrides land on the right system.
+    public func apply(_ preset: LessonPreset) {
+        if let a = preset.attractor { attractor = a }
+        if let vm = preset.viewMode { viewMode = vm }
+        if let ig = preset.integrator { integrator = ig }
+        if let s = preset.sensitiveDependence { sensitiveDependence = s }
+        if let l = preset.showLyapunov { showLyapunov = l }
+        if let params = preset.parameters {
+            for (slot, value) in params { setParameter(slot, value) }
+        }
+    }
+
+    public func isLessonComplete(_ id: String) -> Bool {
+        _ = lessonRevision
+        return completedLessons.contains(id)
+    }
+
+    public func markLessonComplete(_ id: String) {
+        guard !completedLessons.contains(id) else { return }
+        completedLessons.insert(id)
+        lessonRevision &+= 1
+    }
+
     // MARK: - Storage primitives
 
     private enum Key: String, CaseIterable {
         case attractorRaw, speed, zoom, hue, lineWidth, glow, integratorRaw, paramOverrides
-        case viewModeRaw, sensitiveDependence, showLyapunov
+        case viewModeRaw, sensitiveDependence, showLyapunov, completedLessons
     }
 
     private func writeParamOverrides() {
         if let data = try? JSONEncoder().encode(paramOverrides) {
             defaults.set(data, forKey: Key.paramOverrides.rawValue)
+        }
+    }
+
+    private func writeCompletedLessons() {
+        if let data = try? JSONEncoder().encode(Array(completedLessons)) {
+            defaults.set(data, forKey: Key.completedLessons.rawValue)
         }
     }
 

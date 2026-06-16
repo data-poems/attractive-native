@@ -92,7 +92,9 @@ struct ContentView: View {
             case .picker:    AttractorPickerSheet(settings: settings)
             case .equations: EquationView(settings: settings)
             case .settings:  SettingsSheet(settings: settings)
-            case .lessons:   EmptyView() // wired in Phase 9
+            case .lessons:
+                LessonsHomeView(settings: settings)
+                    .presentationDetents([.medium, .large])
             }
         }
     }
@@ -109,6 +111,9 @@ struct ContentView: View {
             Divider().frame(height: 30).overlay(Color.white.opacity(0.15))
 
             // Learn cluster.
+            controlButton(system: "graduationcap", label: "Learn") {
+                activeSheet = .lessons
+            }
             controlButton(system: "slider.horizontal.3", label: "Tune") {
                 inspectorVisible.toggle()
             }
