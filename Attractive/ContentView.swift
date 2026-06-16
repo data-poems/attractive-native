@@ -5,6 +5,7 @@ struct ContentView: View {
     @State private var settings = AttractiveSettings.shared
     @State private var canvasSize: CGSize = .zero
     @State private var showPicker = false
+    @State private var showTune = false
 
     var body: some View {
         ZStack {
@@ -18,7 +19,8 @@ struct ContentView: View {
                                      zoom: settings.zoom,
                                      hue: settings.hue,
                                      lineWidth: settings.lineWidth,
-                                     glow: settings.glow)
+                                     glow: settings.glow,
+                                     integrator: settings.integrator)
                 }
                 .onAppear { canvasSize = geo.size }
                 .onChange(of: geo.size) { _, new in canvasSize = new }
@@ -35,6 +37,10 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showPicker) {
             AttractorPickerSheet(settings: settings)
+        }
+        .sheet(isPresented: $showTune) {
+            ParameterPanel(settings: settings)
+                .presentationDetents([.medium, .large])
         }
     }
 
@@ -58,6 +64,10 @@ struct ContentView: View {
             controlButton(system: speedIcon, label: speedLabel) {
                 let next = settings.speed >= 2.0 ? 0.5 : settings.speed + 0.5
                 settings.speed = next
+            }
+
+            controlButton(system: "slider.horizontal.3", label: "Tune") {
+                showTune = true
             }
         }
         .padding(.horizontal, 16)

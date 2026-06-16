@@ -11,6 +11,7 @@ struct AttractiveCanvas: View {
     let hue: Double
     let lineWidth: Double
     let glow: Bool
+    let integrator: IntegratorKind
 
     @State private var engine = AttractiveEngine()
     @State private var built = false
@@ -38,11 +39,13 @@ struct AttractiveCanvas: View {
         .onChange(of: config)     { _, _ in rebuild() }
         .onChange(of: speed)      { _, new in engine.speed = new }
         .onChange(of: zoom)       { _, new in engine.zoom = new }
+        .onChange(of: integrator) { _, new in engine.integrator = new }
     }
 
     private func rebuild() {
         engine.speed = speed
         engine.zoom = zoom
+        engine.integrator = integrator
         engine.regenerate(width: Double(size.width),
                           height: Double(size.height),
                           config: config)
