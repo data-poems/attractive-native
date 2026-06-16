@@ -22,14 +22,27 @@ struct ContentView: View {
             GeometryReader { geo in
                 ZStack {
                     Color.black
-                    AttractiveCanvas(size: geo.size,
-                                     config: settings.currentConfig(),
-                                     speed: settings.speed,
-                                     zoom: settings.zoom,
-                                     hue: settings.hue,
-                                     lineWidth: settings.lineWidth,
-                                     glow: settings.glow,
-                                     integrator: settings.integrator)
+                    if settings.viewMode == .scene3D {
+                        PhaseSpaceView(config: settings.currentConfig(),
+                                       speed: settings.speed,
+                                       zoom: settings.zoom,
+                                       hue: settings.hue,
+                                       lineWidth: settings.lineWidth,
+                                       glow: settings.glow,
+                                       integrator: settings.integrator,
+                                       sensitive: settings.sensitiveDependence)
+                            .id(ViewMode.scene3D)
+                    } else {
+                        AttractiveCanvas(size: geo.size,
+                                         config: settings.currentConfig(),
+                                         speed: settings.speed,
+                                         zoom: settings.zoom,
+                                         hue: settings.hue,
+                                         lineWidth: settings.lineWidth,
+                                         glow: settings.glow,
+                                         integrator: settings.integrator)
+                            .id(ViewMode.canvas2D)
+                    }
                 }
                 .onAppear { canvasSize = geo.size }
                 .onChange(of: geo.size) { _, new in canvasSize = new }
@@ -83,6 +96,10 @@ struct ContentView: View {
             Divider().frame(height: 30).overlay(Color.white.opacity(0.15))
 
             // Look cluster.
+            controlButton(system: settings.viewMode == .scene3D ? "cube" : "square.on.square",
+                          label: settings.viewMode.displayName) {
+                settings.viewMode = settings.viewMode == .scene3D ? .canvas2D : .scene3D
+            }
             controlButton(system: "paintbrush.pointed", label: "Style") {
                 activeSheet = .settings
             }

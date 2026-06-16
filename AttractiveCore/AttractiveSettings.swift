@@ -37,6 +37,16 @@ public final class AttractiveSettings {
     /// visible choice, not a hidden default.
     public var integratorRaw: String { didSet { write(integratorRaw, .integratorRaw) } }
 
+    /// Whether the trajectory is shown as the flat 2D Canvas or the 3D phase space.
+    public var viewModeRaw: String { didSet { write(viewModeRaw, .viewModeRaw) } }
+
+    /// When on, a second trajectory starting a hair away is drawn alongside the
+    /// first to reveal sensitive dependence (the butterfly effect). 3D only.
+    public var sensitiveDependence: Bool { didSet { write(sensitiveDependence, .sensitiveDependence) } }
+
+    /// When on, the largest Lyapunov exponent is estimated live and shown on the HUD.
+    public var showLyapunov: Bool { didSet { write(showLyapunov, .showLyapunov) } }
+
     /// Per-attractor parameter overrides (p1, p2, p3), keyed by `AttractorID`
     /// raw value. Absent keys fall back to registry defaults, so the slider UI
     /// only persists what the user has actually tuned. Serialized as JSON.
@@ -62,6 +72,9 @@ public final class AttractiveSettings {
         self.lineWidth = Self.readDouble(suite, .lineWidth, default: 1.2)
         self.glow      = Self.readBool(suite, .glow, default: true)
         self.integratorRaw = suite.string(forKey: Key.integratorRaw.rawValue) ?? IntegratorKind.rk4.rawValue
+        self.viewModeRaw = suite.string(forKey: Key.viewModeRaw.rawValue) ?? ViewMode.canvas2D.rawValue
+        self.sensitiveDependence = Self.readBool(suite, .sensitiveDependence, default: false)
+        self.showLyapunov = Self.readBool(suite, .showLyapunov, default: false)
         if let data = suite.data(forKey: Key.paramOverrides.rawValue),
            let decoded = try? JSONDecoder().decode([String: [Double]].self, from: data) {
             self.paramOverrides = decoded
@@ -81,6 +94,11 @@ public final class AttractiveSettings {
     public var integrator: IntegratorKind {
         get { IntegratorKind(rawValue: integratorRaw) ?? .rk4 }
         set { integratorRaw = newValue.rawValue }
+    }
+
+    public var viewMode: ViewMode {
+        get { ViewMode(rawValue: viewModeRaw) ?? .canvas2D }
+        set { viewModeRaw = newValue.rawValue }
     }
 
     /// Build the `AttractorConfig` for the current selection, applying any user
@@ -136,6 +154,7 @@ public final class AttractiveSettings {
 
     private enum Key: String, CaseIterable {
         case attractorRaw, speed, zoom, hue, lineWidth, glow, integratorRaw, paramOverrides
+        case viewModeRaw, sensitiveDependence, showLyapunov
     }
 
     private func writeParamOverrides() {
