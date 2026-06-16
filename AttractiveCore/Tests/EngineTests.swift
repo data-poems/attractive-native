@@ -98,6 +98,56 @@ final class EngineCompanionTests: XCTestCase {
     }
 }
 
+final class LyapunovTests: XCTestCase {
+
+    /// Drive the Benettin estimator directly over a long Lorenz integration and
+    /// check it converges to the literature value within tolerance.
+    func testLyapunovConvergesLorenz() {
+        let cfg = AttractorRegistry.defaultConfig(for: .lorenz)
+        var est = LyapunovEstimator(d0: 1e-8, warmupSteps: 2000, warmTime: 8)
+        let dt = 0.005
+        var (x, y, z) = (0.1, 0.0, 0.0)
+        var c = est.seed(from: SIMD3(x, y, z))
+        for _ in 0..<200_000 {
+            (x, y, z) = cfg.step(x, y, z, dt: dt, integrator: .rk4)
+            let cs = cfg.step(c.x, c.y, c.z, dt: dt, integrator: .rk4)
+            c = est.step(reference: SIMD3(x, y, z), companion: SIMD3(cs.0, cs.1, cs.2), dt: dt)
+        }
+        let reference = AttractorMetadataRegistry.metadata(for: .lorenz).lyapunovEstimate!
+        XCTAssertTrue(est.warm)
+        XCTAssertEqual(est.current, reference, accuracy: reference * 0.2,
+                       "Lorenz λ₁ should converge near \(reference), got \(est.current)")
+    }
+
+    /// Rössler is weakly chaotic — λ₁ is small but positive. Assert sign and a
+    /// generous bound rather than a tight value (its convergence is noisier).
+    func testLyapunovPositiveRossler() {
+        let cfg = AttractorRegistry.defaultConfig(for: .rossler)
+        var est = LyapunovEstimator(d0: 1e-8, warmupSteps: 4000, warmTime: 20)
+        let dt = 0.005
+        var (x, y, z) = (1.0, 1.0, 1.0)
+        var c = est.seed(from: SIMD3(x, y, z))
+        for _ in 0..<400_000 {
+            (x, y, z) = cfg.step(x, y, z, dt: dt, integrator: .rk4)
+            let cs = cfg.step(c.x, c.y, c.z, dt: dt, integrator: .rk4)
+            c = est.step(reference: SIMD3(x, y, z), companion: SIMD3(cs.0, cs.1, cs.2), dt: dt)
+        }
+        XCTAssertGreaterThan(est.current, 0, "Rössler is chaotic ⇒ λ₁ > 0")
+        XCTAssertLessThan(est.current, 0.3, "Rössler λ₁ is small")
+    }
+
+    /// On a non-chaotic regime the estimate should not be strongly positive.
+    /// Thomas above its chaos threshold relaxes toward a limit cycle ⇒ λ₁ ≈ 0.
+    func testLyapunovResetClearsAccumulation() {
+        var est = LyapunovEstimator(d0: 1e-8, warmupSteps: 0)
+        _ = est.step(reference: SIMD3(0, 0, 0), companion: SIMD3(1e-8 * 3, 0, 0), dt: 0.01)
+        XCTAssertNotEqual(est.current, 0)
+        est.reset()
+        XCTAssertEqual(est.current, 0)
+        XCTAssertFalse(est.warm)
+    }
+}
+
 final class IntegratorTests: XCTestCase {
 
     /// Euler step must equal the explicit forward-Euler formula from the

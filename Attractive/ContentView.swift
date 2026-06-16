@@ -32,6 +32,7 @@ struct ContentView: View {
                                        glow: settings.glow,
                                        integrator: settings.integrator,
                                        sensitive: settings.sensitiveDependence,
+                                       lyapunov: settings.showLyapunov,
                                        hud: hud,
                                        onInspect: { hud.inspected = $0 })
                             .id(ViewMode.scene3D)

@@ -13,6 +13,7 @@ struct PhaseSpaceView: UIViewRepresentable {
     let glow: Bool
     let integrator: IntegratorKind
     let sensitive: Bool
+    let lyapunov: Bool
     var hud: PhaseHUDModel? = nil
     var onInspect: ((SIMD3<Double>) -> Void)? = nil
 
@@ -40,7 +41,8 @@ struct PhaseSpaceView: UIViewRepresentable {
         view.addGestureRecognizer(pinch)
 
         coord.apply(config: config, speed: speed, zoom: zoom, hue: hue,
-                    glow: glow, integrator: integrator, sensitive: sensitive)
+                    glow: glow, integrator: integrator, sensitive: sensitive,
+                    lyapunov: lyapunov)
         return view
     }
 
@@ -48,6 +50,6 @@ struct PhaseSpaceView: UIViewRepresentable {
         context.coordinator.onInspect = onInspect
         context.coordinator.apply(config: config, speed: speed, zoom: zoom,
                                   hue: hue, glow: glow, integrator: integrator,
-                                  sensitive: sensitive)
+                                  sensitive: sensitive, lyapunov: lyapunov)
     }
 }

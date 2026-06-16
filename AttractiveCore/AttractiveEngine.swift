@@ -72,6 +72,16 @@ public final class AttractiveEngine {
     /// Euclidean separation between reference and companion in model space.
     public var separation: Double { simd_distance(state, companionState) }
 
+    // MARK: Lyapunov estimation
+
+    /// When true, a separate renormalized companion drives a live estimate of
+    /// the largest Lyapunov exponent (never rendered — its job is measurement,
+    /// not display, and it must stay near the reference, unlike the visual
+    /// companion which is allowed to diverge).
+    public var computesLyapunov: Bool = false
+    public private(set) var lyapunov = LyapunovEstimator()
+    private var lyapState = SIMD3<Double>(repeating: 0)
+
     private var prevTimeMs: Double = 0
     private var started = false
     private var rotation: Double = 0.0
@@ -93,7 +103,7 @@ public final class AttractiveEngine {
         x = p.count > 0 ? p[0] : 0.1
         y = p.count > 1 ? p[1] : 0.0
         z = p.count > 2 ? p[2] : 0.0
-        cx = x + epsilon; cy = y; cz = z
+        resetCompanions()
 
         points.removeAll(keepingCapacity: true)
         points3D.removeAll()
@@ -108,10 +118,10 @@ public final class AttractiveEngine {
 
     /// Relaunch the trajectory from an arbitrary point in model space (e.g. a
     /// long-pressed location in the 3D view). Clears trails and the clock; the
-    /// companion is re-offset by `epsilon`.
+    /// companions are re-seeded.
     public func reseed(at p: SIMD3<Double>) {
         x = p.x; y = p.y; z = p.z
-        cx = x + epsilon; cy = y; cz = z
+        resetCompanions()
 
         points.removeAll(keepingCapacity: true)
         points3D.removeAll()
@@ -122,6 +132,14 @@ public final class AttractiveEngine {
         prevTimeMs = 0
         started = false
         rotation = 0.0
+    }
+
+    /// Re-seed both companions from the current reference and reset the Lyapunov
+    /// accumulation (a time-average that must not carry across a restart).
+    private func resetCompanions() {
+        cx = x + epsilon; cy = y; cz = z
+        lyapunov.reset()
+        lyapState = lyapunov.seed(from: state)
     }
 
     /// Advance the integration to the supplied elapsed time (ms). Returns true
@@ -147,6 +165,12 @@ public final class AttractiveEngine {
             if tracksCompanion {
                 (cx, cy, cz) = config.step(cx, cy, cz, dt: dt, integrator: integrator)
                 companionPoints3D.append(SIMD3<Float>(Float(cx), Float(cy), Float(cz)))
+            }
+            if computesLyapunov {
+                let stepped = config.step(lyapState.x, lyapState.y, lyapState.z, dt: dt, integrator: integrator)
+                lyapState = lyapunov.step(reference: state,
+                                          companion: SIMD3(stepped.0, stepped.1, stepped.2),
+                                          dt: dt)
             }
             headIndex += 1
         }

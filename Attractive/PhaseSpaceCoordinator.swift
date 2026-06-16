@@ -26,6 +26,7 @@ final class PhaseSpaceCoordinator: NSObject, SCNSceneRendererDelegate {
     private var hue: Double = 0.55
     private var glow: Bool = true
     private var sensitive: Bool = false
+    private var lyapunov: Bool = false
 
     // Clock.
     private var firstTime: TimeInterval = 0
@@ -81,7 +82,7 @@ final class PhaseSpaceCoordinator: NSObject, SCNSceneRendererDelegate {
 
     func apply(config: AttractorConfig, speed: Double, zoom: Double,
                hue: Double, glow: Bool, integrator: IntegratorKind,
-               sensitive: Bool) {
+               sensitive: Bool, lyapunov: Bool) {
         engine.speed = speed
         engine.zoom = zoom
         engine.integrator = integrator
@@ -90,13 +91,16 @@ final class PhaseSpaceCoordinator: NSObject, SCNSceneRendererDelegate {
 
         let configChanged = (self.config != config)
         let sensitivityChanged = (self.sensitive != sensitive)
+        let lyapunovChanged = (self.lyapunov != lyapunov)
         self.config = config
         self.sensitive = sensitive
+        self.lyapunov = lyapunov
 
         cameraNode.camera?.bloomIntensity = glow ? 1.4 : 0
 
-        if configChanged || sensitivityChanged || !started {
+        if configChanged || sensitivityChanged || lyapunovChanged || !started {
             engine.tracksCompanion = sensitive
+            engine.computesLyapunov = lyapunov
             engine.regenerate(width: 400, height: 400, config: config)
             companionTrail.clear()
             started = false
@@ -125,10 +129,18 @@ final class PhaseSpaceCoordinator: NSObject, SCNSceneRendererDelegate {
         headNode.position = SCNVector3(Float(s.x), Float(s.y), Float(s.z))
 
         // Throttled HUD telemetry (~10 Hz) — hop to the main actor.
-        if sensitive, time - lastHUDTime > 0.1 {
+        if (sensitive || lyapunov), time - lastHUDTime > 0.1 {
             lastHUDTime = time
-            let sep = engine.separation
-            Task { @MainActor [weak self] in self?.hud?.pushSeparation(sep) }
+            let sep = sensitive ? engine.separation : nil
+            let lyap = lyapunov ? engine.lyapunov.current : nil
+            let warm = engine.lyapunov.warm
+            Task { @MainActor [weak self] in
+                if let sep { self?.hud?.pushSeparation(sep) }
+                if let lyap {
+                    self?.hud?.lyapunov = lyap
+                    self?.hud?.lyapunovWarm = warm
+                }
+            }
         }
 
         frameCameraIfNeeded()
