@@ -37,8 +37,16 @@ struct PhaseSpaceView: UIViewRepresentable {
 
         let pan = UIPanGestureRecognizer(target: coord, action: #selector(PhaseSpaceCoordinator.handlePan(_:)))
         let pinch = UIPinchGestureRecognizer(target: coord, action: #selector(PhaseSpaceCoordinator.handlePinch(_:)))
+        let tap = UITapGestureRecognizer(target: coord, action: #selector(PhaseSpaceCoordinator.handleTap(_:)))
+        let longPress = UILongPressGestureRecognizer(target: coord, action: #selector(PhaseSpaceCoordinator.handleLongPress(_:)))
+        longPress.minimumPressDuration = 0.45
+        for g in [pan, pinch, tap, longPress] { g.delegate = coord }
+        // A tap should only fire if it wasn't the start of a long-press.
+        tap.require(toFail: longPress)
         view.addGestureRecognizer(pan)
         view.addGestureRecognizer(pinch)
+        view.addGestureRecognizer(tap)
+        view.addGestureRecognizer(longPress)
 
         coord.apply(config: config, speed: speed, zoom: zoom, hue: hue,
                     glow: glow, integrator: integrator, sensitive: sensitive,
