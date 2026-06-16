@@ -6,6 +6,7 @@ struct ContentView: View {
     @State private var canvasSize: CGSize = .zero
     @State private var showPicker = false
     @State private var showTune = false
+    @State private var showEquations = false
 
     var body: some View {
         ZStack {
@@ -42,6 +43,9 @@ struct ContentView: View {
             ParameterPanel(settings: settings)
                 .presentationDetents([.medium, .large])
         }
+        .sheet(isPresented: $showEquations) {
+            EquationView(settings: settings)
+        }
     }
 
     // MARK: - Control bar
@@ -68,6 +72,10 @@ struct ContentView: View {
 
             controlButton(system: "slider.horizontal.3", label: "Tune") {
                 showTune = true
+            }
+
+            controlButton(system: "function", label: "Math") {
+                showEquations = true
             }
         }
         .padding(.horizontal, 16)

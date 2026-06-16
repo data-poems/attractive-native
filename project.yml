@@ -16,11 +16,18 @@ settings:
     CODE_SIGN_STYLE: Automatic
     ENABLE_USER_SCRIPT_SANDBOXING: YES
 
+packages:
+  SwiftMath:
+    url: https://github.com/mgriebling/SwiftMath
+    from: "1.7.0"
+
 targets:
 
   Attractive:
     type: application
     platform: iOS
+    dependencies:
+      - package: SwiftMath
     sources:
       - path: Attractive
       - path: AttractiveCore
