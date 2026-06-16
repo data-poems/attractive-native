@@ -55,6 +55,18 @@ public struct RingBuffer<T> {
         return out
     }
 
+    /// The last `n` elements in order (oldest→newest of that tail).
+    public func suffix(_ n: Int) -> [T] {
+        let c = storage.count
+        guard c > 0, n > 0 else { return [] }
+        let k = min(n, c)
+        let start = c < capacity ? 0 : writeIndex
+        var out = [T]()
+        out.reserveCapacity(k)
+        for i in (c - k)..<c { out.append(storage[(start + i) % capacity]) }
+        return out
+    }
+
     /// The most-recently appended element, or nil if empty.
     public var last: T? {
         guard !storage.isEmpty else { return nil }

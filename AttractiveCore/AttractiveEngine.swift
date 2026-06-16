@@ -41,8 +41,8 @@ public final class AttractiveEngine {
     private var y: Double = 0
     private var z: Double = 0
 
-    // Trail of projected 2D points (most-recent last).
-    public private(set) var points: [CGPoint] = []
+    // Trail of projected 2D points (oldest→newest), for the Canvas.
+    public private(set) var points: RingBuffer<CGPoint>
 
     /// Trail of raw 3D model-space points (oldest→newest), for the SceneKit
     /// phase space. `Float` halves the per-frame GPU upload versus `Double`.
@@ -88,6 +88,7 @@ public final class AttractiveEngine {
 
     public init(config: AttractorConfig = AttractorRegistry.defaultConfig(for: .lorenz)) {
         self.config = config
+        self.points = RingBuffer<CGPoint>(capacity: maxPoints)
         self.points3D = RingBuffer<SIMD3<Float>>(capacity: maxPoints)
         self.companionPoints3D = RingBuffer<SIMD3<Float>>(capacity: maxPoints)
     }
@@ -200,19 +201,16 @@ public final class AttractiveEngine {
         let px = width / 2 + rx * unit * (s / 60.0)
         let py = height / 2 - (y * 0.6 + rz * 0.4) * unit * (s / 60.0)
 
-        points.append(CGPoint(x: px, y: py))
-        if points.count > maxPoints {
-            points.removeFirst(points.count - maxPoints)
-        }
+        points.append(CGPoint(x: px, y: py))   // ring buffer evicts oldest, O(1)
     }
 
     /// The full trail as a single CGPath polyline.
     public func trailPath() -> CGPath {
         let path = CGMutablePath()
-        guard let first = points.first else { return path }
-        path.move(to: first)
-        for pt in points.dropFirst() {
-            path.addLine(to: pt)
+        var moved = false
+        points.forEachOrdered { pt in
+            if moved { path.addLine(to: pt) }
+            else { path.move(to: pt); moved = true }
         }
         return path
     }

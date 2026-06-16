@@ -9,6 +9,15 @@ final class PhaseSpaceCoordinator: NSObject, SCNSceneRendererDelegate, UIGesture
 
     let scene = SCNScene()
     private let engine = AttractiveEngine()
+    /// Serializes all access to `engine`, which is mutated from the main thread
+    /// (apply / gesture handlers) and advanced+read on SceneKit's render thread.
+    private let engineLock = NSLock()
+
+    @inline(__always)
+    private func locked<T>(_ body: () -> T) -> T {
+        engineLock.lock(); defer { engineLock.unlock() }
+        return body()
+    }
 
     // Camera rig: orbit node at the attractor centre, camera pulled back along z.
     private let cameraOrbit = SCNNode()
@@ -94,9 +103,6 @@ final class PhaseSpaceCoordinator: NSObject, SCNSceneRendererDelegate, UIGesture
     func apply(config: AttractorConfig, speed: Double, zoom: Double,
                hue: Double, glow: Bool, integrator: IntegratorKind,
                sensitive: Bool, lyapunov: Bool) {
-        engine.speed = speed
-        engine.zoom = zoom
-        engine.integrator = integrator
         self.hue = hue
         self.glow = glow
 
@@ -109,10 +115,18 @@ final class PhaseSpaceCoordinator: NSObject, SCNSceneRendererDelegate, UIGesture
 
         cameraNode.camera?.bloomIntensity = glow ? 1.4 : 0
 
-        if configChanged || sensitivityChanged || lyapunovChanged || !started {
-            engine.tracksCompanion = sensitive
-            engine.computesLyapunov = lyapunov
-            engine.regenerate(width: 400, height: 400, config: config)
+        let mustRegenerate = configChanged || sensitivityChanged || lyapunovChanged || !started
+        locked {
+            engine.speed = speed
+            engine.zoom = zoom
+            engine.integrator = integrator
+            if mustRegenerate {
+                engine.tracksCompanion = sensitive
+                engine.computesLyapunov = lyapunov
+                engine.regenerate(width: 400, height: 400, config: config)
+            }
+        }
+        if mustRegenerate {
             companionTrail.clear()
             started = false
             framedOnce = false
@@ -128,23 +142,31 @@ final class PhaseSpaceCoordinator: NSObject, SCNSceneRendererDelegate, UIGesture
     func renderer(_ renderer: SCNSceneRenderer, updateAtTime time: TimeInterval) {
         if !started { started = true; firstTime = time }
         let elapsedMs = (time - firstTime) * 1000.0
-        engine.advance(timeMs: elapsedMs)
 
         let rgb = Self.rgb(hue: hue)
-        trail.update(points: engine.points3D, rgb: rgb)
-        if sensitive {
-            companionTrail.update(points: engine.companionPoints3D, rgb: Self.rgb(hue: (hue + 0.5).truncatingRemainder(dividingBy: 1)))
+        let companionRgb = Self.rgb(hue: (hue + 0.5).truncatingRemainder(dividingBy: 1))
+
+        // Advance and read all engine state under the lock so a concurrent
+        // main-thread apply()/reseed() can't tear it.
+        let snapshot: (state: SIMD3<Double>, sep: Double?, lyap: Double?, warm: Bool) = locked {
+            engine.advance(timeMs: elapsedMs)
+            trail.update(points: engine.points3D, rgb: rgb)
+            if sensitive {
+                companionTrail.update(points: engine.companionPoints3D, rgb: companionRgb)
+            }
+            frameCameraIfNeededLocked()
+            return (engine.state,
+                    sensitive ? engine.separation : nil,
+                    lyapunov ? engine.lyapunov.current : nil,
+                    engine.lyapunov.warm)
         }
 
-        let s = engine.state
-        headNode.position = SCNVector3(Float(s.x), Float(s.y), Float(s.z))
+        headNode.position = SCNVector3(Float(snapshot.state.x), Float(snapshot.state.y), Float(snapshot.state.z))
 
         // Throttled HUD telemetry (~10 Hz) — hop to the main actor.
         if (sensitive || lyapunov), time - lastHUDTime > 0.1 {
             lastHUDTime = time
-            let sep = sensitive ? engine.separation : nil
-            let lyap = lyapunov ? engine.lyapunov.current : nil
-            let warm = engine.lyapunov.warm
+            let sep = snapshot.sep, lyap = snapshot.lyap, warm = snapshot.warm
             Task { @MainActor [weak self] in
                 if let sep { self?.hud?.pushSeparation(sep) }
                 if let lyap {
@@ -153,20 +175,23 @@ final class PhaseSpaceCoordinator: NSObject, SCNSceneRendererDelegate, UIGesture
                 }
             }
         }
-
-        frameCameraIfNeeded()
     }
 
     /// Centre the orbit on the attractor and choose a pull-back distance from
-    /// the trail's bounding box, once enough points exist.
-    private func frameCameraIfNeeded() {
-        guard !framedOnce, engine.points3D.count > 200 else { return }
-        let lo = engine.boundsMin, hi = engine.boundsMax
+    /// the trail's *current* extent. Recomputed from the live buffer (not the
+    /// monotonic running bounds, which retain inflated startup transients), and
+    /// deferred until the trajectory has had time to settle. Caller holds the
+    /// engine lock.
+    private func frameCameraIfNeededLocked() {
+        guard !framedOnce, engine.points3D.count > 1500 else { return }
+        var lo = SIMD3<Float>(repeating: .greatestFiniteMagnitude)
+        var hi = SIMD3<Float>(repeating: -.greatestFiniteMagnitude)
+        engine.points3D.forEachOrdered { p in lo = simd_min(lo, p); hi = simd_max(hi, p) }
         guard lo.x.isFinite, hi.x.isFinite else { return }
         let center = (lo + hi) * 0.5
         cameraOrbit.position = SCNVector3(center.x, center.y, center.z)
         let extent = simd_length(hi - lo)
-        baseRadius = CGFloat(max(extent, 1)) * 1.4
+        baseRadius = CGFloat(max(extent, 1)) * 1.2
         orbitRadius = baseRadius
         cameraNode.position = SCNVector3(0, 0, orbitRadius)
         framedOnce = true
@@ -216,7 +241,7 @@ final class PhaseSpaceCoordinator: NSObject, SCNSceneRendererDelegate, UIGesture
         guard g.state == .began,
               let view = g.view as? SCNView,
               let p = nearestTrailPoint(to: g.location(in: view), in: view) else { return }
-        engine.reseed(at: SIMD3<Double>(Double(p.x), Double(p.y), Double(p.z)))
+        locked { engine.reseed(at: SIMD3<Double>(Double(p.x), Double(p.y), Double(p.z))) }
         markerNode.isHidden = true
         started = false
         framedOnce = false
@@ -225,7 +250,9 @@ final class PhaseSpaceCoordinator: NSObject, SCNSceneRendererDelegate, UIGesture
 
     /// The trail point nearest the ray cast through a screen location. Line
     /// geometry is effectively unpickable, so we unproject a ray and find the
-    /// closest stored 3D point — exact, and trivial at tap frequency.
+    /// closest stored 3D point — exact, and trivial at tap frequency. Points
+    /// behind the camera (t < 0 along the ray) are excluded so a tap can't snap
+    /// to clipped, invisible geometry.
     private func nearestTrailPoint(to location: CGPoint, in view: SCNView) -> SIMD3<Float>? {
         let near = view.unprojectPoint(SCNVector3(Float(location.x), Float(location.y), 0))
         let far = view.unprojectPoint(SCNVector3(Float(location.x), Float(location.y), 1))
@@ -234,12 +261,15 @@ final class PhaseSpaceCoordinator: NSObject, SCNSceneRendererDelegate, UIGesture
 
         var best: SIMD3<Float>?
         var bestDist = Float.greatestFiniteMagnitude
-        engine.points3D.forEachOrdered { p in
-            let v = p - origin
-            let t = simd_dot(v, dir)
-            let closest = origin + dir * t
-            let d = simd_length(p - closest)
-            if d < bestDist { bestDist = d; best = p }
+        locked {
+            engine.points3D.forEachOrdered { p in
+                let v = p - origin
+                let t = simd_dot(v, dir)
+                guard t > 0 else { return }   // skip points behind the camera
+                let closest = origin + dir * t
+                let d = simd_length(p - closest)
+                if d < bestDist { bestDist = d; best = p }
+            }
         }
         return best
     }

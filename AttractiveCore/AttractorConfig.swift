@@ -98,9 +98,10 @@ public struct AttractorConfig: Equatable, Codable, Hashable, Sendable {
 
     /// The vector field ẋ = f(x, y, z): the instantaneous derivative of each
     /// state variable, with no time-stepping. Ported from each system's
-    /// `compute` closure in `main.js`. Note that the Thomas/Halvorsen display
-    /// speed multipliers are applied by the engine, not baked in here, so the
-    /// field stays a pure derivative that RK4 can sample at intermediate points.
+    /// `compute` closure in `main.js`. The Thomas/Halvorsen display-speed
+    /// multipliers are folded directly into the field here as constant scalar
+    /// factors — a pure time rescaling that leaves the attractor's shape
+    /// unchanged and that RK4 can still sample correctly at intermediate points.
     @inline(__always)
     public func derivative(_ x: Double, _ y: Double, _ z: Double) -> (Double, Double, Double) {
         switch id {
@@ -140,7 +141,8 @@ public struct AttractorConfig: Equatable, Codable, Hashable, Sendable {
                     (-p1 * z - 4 * x - 4 * y - x * x) * m)
 
         case .chen:
-            // p1=alpha, p2=beta, p3=gamma.
+            // p1=a (coupling), p2=b (dissipation), p3=c (drive) — matching the
+            // a/b/c symbols in AttractorMetadata. System: ẏ = (c-a)x - xz + cy.
             return (p1 * (y - x),
                     (p3 - p1) * x - x * z + p3 * y,
                     x * y - p2 * z)
