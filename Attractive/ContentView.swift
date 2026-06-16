@@ -12,6 +12,7 @@ struct ContentView: View {
     }
 
     @State private var settings = AttractiveSettings.shared
+    @State private var hud = PhaseHUDModel()
     @State private var canvasSize: CGSize = .zero
     @State private var activeSheet: ActiveSheet?
     @State private var inspectorVisible = false
@@ -30,7 +31,9 @@ struct ContentView: View {
                                        lineWidth: settings.lineWidth,
                                        glow: settings.glow,
                                        integrator: settings.integrator,
-                                       sensitive: settings.sensitiveDependence)
+                                       sensitive: settings.sensitiveDependence,
+                                       hud: hud,
+                                       onInspect: { hud.inspected = $0 })
                             .id(ViewMode.scene3D)
                     } else {
                         AttractiveCanvas(size: geo.size,
@@ -51,7 +54,26 @@ struct ContentView: View {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("\(settings.attractor.displayName) attractor")
 
-            // Layer 2 — bottom control bar.
+            // Layer 2 — telemetry HUD (3D only, when a chaos lens is on).
+            if settings.viewMode == .scene3D,
+               settings.sensitiveDependence || settings.showLyapunov {
+                VStack {
+                    HStack {
+                        PhaseHUD(model: hud,
+                                 metadata: AttractorMetadataRegistry.metadata(for: settings.attractor),
+                                 showSeparation: settings.sensitiveDependence,
+                                 showLyapunov: settings.showLyapunov,
+                                 accent: Color(hue: settings.hue, saturation: 0.85, brightness: 1.0))
+                        Spacer()
+                    }
+                    Spacer()
+                }
+                .padding(.top, 60)
+                .padding(.horizontal, 16)
+                .allowsHitTesting(false)
+            }
+
+            // Layer 3 — bottom control bar.
             VStack {
                 Spacer()
                 controlBar

@@ -32,6 +32,10 @@ final class PhaseSpaceCoordinator: NSObject, SCNSceneRendererDelegate {
     private var started = false
     private var framedOnce = false
 
+    // HUD telemetry (written throttled, on the main actor).
+    var hud: PhaseHUDModel?
+    private var lastHUDTime: TimeInterval = 0
+
     // Inspection callback (Phase 8) — set by the view.
     var onInspect: ((SIMD3<Double>) -> Void)?
 
@@ -97,6 +101,7 @@ final class PhaseSpaceCoordinator: NSObject, SCNSceneRendererDelegate {
             companionTrail.clear()
             started = false
             framedOnce = false
+            Task { @MainActor [weak self] in self?.hud?.reset() }
         }
         // Orbit radius responds to the zoom control.
         orbitRadius = baseRadius / max(0.2, CGFloat(zoom))
@@ -118,6 +123,13 @@ final class PhaseSpaceCoordinator: NSObject, SCNSceneRendererDelegate {
 
         let s = engine.state
         headNode.position = SCNVector3(Float(s.x), Float(s.y), Float(s.z))
+
+        // Throttled HUD telemetry (~10 Hz) — hop to the main actor.
+        if sensitive, time - lastHUDTime > 0.1 {
+            lastHUDTime = time
+            let sep = engine.separation
+            Task { @MainActor [weak self] in self?.hud?.pushSeparation(sep) }
+        }
 
         frameCameraIfNeeded()
     }

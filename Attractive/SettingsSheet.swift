@@ -19,6 +19,26 @@ struct SettingsSheet: View {
                         IntegratorPicker(settings: settings)
                     }
 
+                    group("Chaos lens (3D)") {
+                        Toggle(isOn: $settings.sensitiveDependence) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Sensitive dependence").foregroundStyle(.white)
+                                Text("Draw a second trajectory a hair away and watch them diverge")
+                                    .font(.caption2).foregroundStyle(.white.opacity(0.55))
+                            }
+                        }
+                        .tint(accent)
+
+                        Toggle(isOn: $settings.showLyapunov) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Lyapunov exponent").foregroundStyle(.white)
+                                Text("Estimate λ₁ live — the rate of chaos")
+                                    .font(.caption2).foregroundStyle(.white.opacity(0.55))
+                            }
+                        }
+                        .tint(accent)
+                    }
+
                     group("Motion") {
                         labeledSlider("Speed", value: $settings.speed,
                                       range: 0.2...3, step: 0.1,

@@ -13,6 +13,7 @@ struct PhaseSpaceView: UIViewRepresentable {
     let glow: Bool
     let integrator: IntegratorKind
     let sensitive: Bool
+    var hud: PhaseHUDModel? = nil
     var onInspect: ((SIMD3<Double>) -> Void)? = nil
 
     func makeCoordinator() -> PhaseSpaceCoordinator {
@@ -31,6 +32,7 @@ struct PhaseSpaceView: UIViewRepresentable {
         view.preferredFramesPerSecond = 0   // let SceneKit pick (120 on ProMotion)
         view.antialiasingMode = .multisampling4X
         coord.onInspect = onInspect
+        coord.hud = hud
 
         let pan = UIPanGestureRecognizer(target: coord, action: #selector(PhaseSpaceCoordinator.handlePan(_:)))
         let pinch = UIPinchGestureRecognizer(target: coord, action: #selector(PhaseSpaceCoordinator.handlePinch(_:)))
