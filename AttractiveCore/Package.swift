@@ -4,7 +4,8 @@ import PackageDescription
 let package = Package(
     name: "AttractiveKit",
     platforms: [
-        .iOS(.v17)
+        .iOS(.v17),
+        .macOS(.v14)
     ],
     products: [
         .library(name: "AttractiveKit", targets: ["AttractiveKit"])
@@ -13,7 +14,12 @@ let package = Package(
         .target(
             name: "AttractiveKit",
             path: ".",
-            exclude: ["Package.swift"]
+            exclude: ["Package.swift", "Tests"]
+        ),
+        .testTarget(
+            name: "AttractiveKitTests",
+            dependencies: ["AttractiveKit"],
+            path: "Tests"
         )
     ]
 )

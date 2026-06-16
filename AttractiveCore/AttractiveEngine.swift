@@ -1,11 +1,13 @@
 import Foundation
 import CoreGraphics
+import simd
 
 /// Integrates a single strange attractor and maintains a rolling trail of
-/// recently-visited points, projected to 2D for drawing. Modeled on
+/// recently-visited points — both as raw 3D model-space coordinates (for the
+/// SceneKit phase space) and projected to 2D (for the Canvas). Modeled on
 /// `MandazaEngine`: a `regenerate(...)` to (re)seed and an `advance(timeMs:)`
-/// driven by a SwiftUI `TimelineView`. No SwiftUI/UIKit dependency — testable
-/// and safe to use off the main thread.
+/// driven by a render clock. No SwiftUI/UIKit dependency — testable and safe to
+/// use off the main thread.
 public final class AttractiveEngine {
 
     // Inputs
@@ -42,12 +44,42 @@ public final class AttractiveEngine {
     // Trail of projected 2D points (most-recent last).
     public private(set) var points: [CGPoint] = []
 
+    /// Trail of raw 3D model-space points (oldest→newest), for the SceneKit
+    /// phase space. `Float` halves the per-frame GPU upload versus `Double`.
+    public private(set) var points3D: RingBuffer<SIMD3<Float>>
+
+    /// Monotonic count of integration substeps taken since the last
+    /// `regenerate`/`reseed` — lets the renderer detect new points cheaply.
+    public private(set) var headIndex: Int = 0
+
+    /// Current head state in model space.
+    public var state: SIMD3<Double> { SIMD3(x, y, z) }
+
+    /// Running model-space bounding box of the 3D trail, for camera framing.
+    public private(set) var boundsMin = SIMD3<Float>(repeating: .greatestFiniteMagnitude)
+    public private(set) var boundsMax = SIMD3<Float>(repeating: -.greatestFiniteMagnitude)
+
+    // MARK: Companion trajectory (sensitive dependence)
+
+    /// When true, a second trajectory starting `epsilon` away is integrated in
+    /// lockstep with the reference — the basis of the butterfly-effect demo.
+    public var tracksCompanion: Bool = false
+    /// Initial separation of the companion from the reference.
+    public var epsilon: Double = 1e-5
+    private var cx: Double = 0, cy: Double = 0, cz: Double = 0
+    public private(set) var companionPoints3D: RingBuffer<SIMD3<Float>>
+    public var companionState: SIMD3<Double> { SIMD3(cx, cy, cz) }
+    /// Euclidean separation between reference and companion in model space.
+    public var separation: Double { simd_distance(state, companionState) }
+
     private var prevTimeMs: Double = 0
     private var started = false
     private var rotation: Double = 0.0
 
     public init(config: AttractorConfig = AttractorRegistry.defaultConfig(for: .lorenz)) {
         self.config = config
+        self.points3D = RingBuffer<SIMD3<Float>>(capacity: maxPoints)
+        self.companionPoints3D = RingBuffer<SIMD3<Float>>(capacity: maxPoints)
     }
 
     /// (Re)seed the trajectory for the given canvas size. Optionally adopt a
@@ -61,8 +93,32 @@ public final class AttractiveEngine {
         x = p.count > 0 ? p[0] : 0.1
         y = p.count > 1 ? p[1] : 0.0
         z = p.count > 2 ? p[2] : 0.0
+        cx = x + epsilon; cy = y; cz = z
 
         points.removeAll(keepingCapacity: true)
+        points3D.removeAll()
+        companionPoints3D.removeAll()
+        boundsMin = SIMD3<Float>(repeating: .greatestFiniteMagnitude)
+        boundsMax = SIMD3<Float>(repeating: -.greatestFiniteMagnitude)
+        headIndex = 0
+        prevTimeMs = 0
+        started = false
+        rotation = 0.0
+    }
+
+    /// Relaunch the trajectory from an arbitrary point in model space (e.g. a
+    /// long-pressed location in the 3D view). Clears trails and the clock; the
+    /// companion is re-offset by `epsilon`.
+    public func reseed(at p: SIMD3<Double>) {
+        x = p.x; y = p.y; z = p.z
+        cx = x + epsilon; cy = y; cz = z
+
+        points.removeAll(keepingCapacity: true)
+        points3D.removeAll()
+        companionPoints3D.removeAll()
+        boundsMin = SIMD3<Float>(repeating: .greatestFiniteMagnitude)
+        boundsMax = SIMD3<Float>(repeating: -.greatestFiniteMagnitude)
+        headIndex = 0
         prevTimeMs = 0
         started = false
         rotation = 0.0
@@ -86,10 +142,24 @@ public final class AttractiveEngine {
         let dt = baseDt
         for _ in 0..<steps {
             (x, y, z) = config.step(x, y, z, dt: dt, integrator: integrator)
+            append3D()
             appendProjected()
+            if tracksCompanion {
+                (cx, cy, cz) = config.step(cx, cy, cz, dt: dt, integrator: integrator)
+                companionPoints3D.append(SIMD3<Float>(Float(cx), Float(cy), Float(cz)))
+            }
+            headIndex += 1
         }
         rotation += frameDt * 0.00012
         return true
+    }
+
+    /// Append the current 3D point and grow the bounding box.
+    private func append3D() {
+        let p = SIMD3<Float>(Float(x), Float(y), Float(z))
+        points3D.append(p)
+        boundsMin = simd_min(boundsMin, p)
+        boundsMax = simd_max(boundsMax, p)
     }
 
     /// Project the current 3D point to canvas space and append to the trail.

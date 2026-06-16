@@ -33,6 +33,8 @@ targets:
       - path: AttractiveCore
         excludes:
           - "Package.swift"
+          - "Tests"
+          - ".build"
     info:
       path: Attractive/Info.plist
       properties:
