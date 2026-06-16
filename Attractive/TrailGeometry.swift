@@ -42,11 +42,14 @@ final class TrailGeometry {
             vertices[i * 3 + 0] = p.x
             vertices[i * 3 + 1] = p.y
             vertices[i * 3 + 2] = p.z
+            // Tail→head ramp. Push the colour into HDR (well above 1.0) toward
+            // the leading edge so additive blending + bloom make it burn.
             let a = Float(i) / denom
-            colors[i * 4 + 0] = rgb.x
-            colors[i * 4 + 1] = rgb.y
-            colors[i * 4 + 2] = rgb.z
-            colors[i * 4 + 3] = 0.12 + 0.88 * a
+            let intensity = 0.6 + 3.4 * (a * a)   // faint tail, blazing head
+            colors[i * 4 + 0] = rgb.x * intensity
+            colors[i * 4 + 1] = rgb.y * intensity
+            colors[i * 4 + 2] = rgb.z * intensity
+            colors[i * 4 + 3] = 0.35 + 0.65 * a
             i += 1
         }
         let count = min(n, capacity)

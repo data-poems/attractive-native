@@ -19,6 +19,9 @@ final class PhaseSpaceCoordinator: NSObject, SCNSceneRendererDelegate, UIGesture
         return body()
     }
 
+    /// Bloom strength when glow is on — cranked for a hot, neon phase space.
+    static let bloomLevel: CGFloat = 3.6
+
     // Camera rig: orbit node at the attractor centre, camera pulled back along z.
     private let cameraOrbit = SCNNode()
     private let cameraNode = SCNNode()
@@ -65,15 +68,17 @@ final class PhaseSpaceCoordinator: NSObject, SCNSceneRendererDelegate, UIGesture
         cam.fieldOfView = 45
         cam.zNear = 0.1
         cam.zFar = 10_000
-        cam.bloomIntensity = 1.4
-        cam.bloomBlurRadius = 12
-        cam.bloomThreshold = 0.2
+        cam.bloomIntensity = Self.bloomLevel
+        cam.bloomBlurRadius = 22
+        cam.bloomThreshold = 0.0          // every lit pixel contributes to the glow
+        cam.bloomIterationCount = 3       // wider, softer halo
+        cam.wantsHDR = true
         cameraNode.camera = cam
         cameraNode.position = SCNVector3(0, 0, orbitRadius)
         cameraOrbit.addChildNode(cameraNode)
         scene.rootNode.addChildNode(cameraOrbit)
 
-        let head = SCNSphere(radius: 0.6)
+        let head = SCNSphere(radius: 0.9)
         let hm = SCNMaterial()
         hm.lightingModel = .constant
         hm.diffuse.contents = UIColor.white
@@ -113,7 +118,7 @@ final class PhaseSpaceCoordinator: NSObject, SCNSceneRendererDelegate, UIGesture
         self.sensitive = sensitive
         self.lyapunov = lyapunov
 
-        cameraNode.camera?.bloomIntensity = glow ? 1.4 : 0
+        cameraNode.camera?.bloomIntensity = glow ? Self.bloomLevel : 0
 
         let mustRegenerate = configChanged || sensitivityChanged || lyapunovChanged || !started
         locked {
