@@ -67,54 +67,83 @@ public struct AttractorConfig: Equatable, Codable, Hashable, Sendable {
 
     // MARK: - ODE step
 
-    /// One explicit-Euler integration step. Ports each system's `compute`
-    /// closure from `main.js` faithfully. Returns the advanced (x, y, z).
+    /// One integration step using the requested numerical scheme. Euler is the
+    /// faithful port of the original `compute` closures; RK4 is the fourth-order
+    /// scheme whose smaller error the learner can observe directly against Euler.
+    /// Returns the advanced (x, y, z).
+    @inline(__always)
+    public func step(_ x: Double, _ y: Double, _ z: Double, dt: Double,
+                     integrator: IntegratorKind) -> (Double, Double, Double) {
+        switch integrator {
+        case .euler:
+            let (dx, dy, dz) = derivative(x, y, z)
+            return (x + dx * dt, y + dy * dt, z + dz * dt)
+        case .rk4:
+            let (k1x, k1y, k1z) = derivative(x, y, z)
+            let (k2x, k2y, k2z) = derivative(x + k1x * dt/2, y + k1y * dt/2, z + k1z * dt/2)
+            let (k3x, k3y, k3z) = derivative(x + k2x * dt/2, y + k2y * dt/2, z + k2z * dt/2)
+            let (k4x, k4y, k4z) = derivative(x + k3x * dt,   y + k3y * dt,   z + k3z * dt)
+            return (x + dt/6 * (k1x + 2*k2x + 2*k3x + k4x),
+                    y + dt/6 * (k1y + 2*k2y + 2*k3y + k4y),
+                    z + dt/6 * (k1z + 2*k2z + 2*k3z + k4z))
+        }
+    }
+
+    /// Explicit-Euler step. Retained for call sites that don't expose the
+    /// integrator choice; equivalent to `step(_:_:_:dt:integrator: .euler)`.
     @inline(__always)
     public func step(_ x: Double, _ y: Double, _ z: Double, dt: Double) -> (Double, Double, Double) {
+        step(x, y, z, dt: dt, integrator: .euler)
+    }
+
+    /// The vector field ẋ = f(x, y, z): the instantaneous derivative of each
+    /// state variable, with no time-stepping. Ported from each system's
+    /// `compute` closure in `main.js`. Note that the Thomas/Halvorsen display
+    /// speed multipliers are applied by the engine, not baked in here, so the
+    /// field stays a pure derivative that RK4 can sample at intermediate points.
+    @inline(__always)
+    public func derivative(_ x: Double, _ y: Double, _ z: Double) -> (Double, Double, Double) {
         switch id {
         case .lorenz:
-            let dx = p1 * (y - x)
-            let dy = x * (p2 - z) - y
-            let dz = x * y - p3 * z
-            return (x + dx * dt, y + dy * dt, z + dz * dt)
+            return (p1 * (y - x),
+                    x * (p2 - z) - y,
+                    x * y - p3 * z)
 
         case .rossler:
-            let dx = -y - z
-            let dy = x + p1 * y
-            let dz = p2 + z * (x - p3)
-            return (x + dx * dt, y + dy * dt, z + dz * dt)
+            return (-y - z,
+                    x + p1 * y,
+                    p2 + z * (x - p3))
 
         case .aizawa:
             // Standard Aizawa: d, e, f fixed. p1=a, p2=b, p3=c.
             let a = p1, b = p2, c = p3
             let d = 3.5, e = 0.25, f = 0.1
-            let dx = (z - b) * x - d * y
-            let dy = d * x + (z - b) * y
-            let dz = c + a * z - (z * z * z) / 3 - (x * x + y * y) * (1 + e * z) + f * z * x * x * x
-            return (x + dx * dt, y + dy * dt, z + dz * dt)
+            return ((z - b) * x - d * y,
+                    d * x + (z - b) * y,
+                    c + a * z - (z * z * z) / 3 - (x * x + y * y) * (1 + e * z) + f * z * x * x * x)
 
         case .thomas:
-            // p1=b (dissipation), p2=speedMult, p3=chaos.
-            let b = p1, speedMult = p2, chaos = p3
-            let dx = sin(y * chaos) - b * x
-            let dy = sin(z * chaos) - b * y
-            let dz = sin(x * chaos) - b * z
-            return (x + dx * dt * speedMult, y + dy * dt * speedMult, z + dz * dt * speedMult)
+            // p1=b (dissipation), p2=display speed multiplier, p3=frequency.
+            // The speed multiplier is a constant rescaling of the whole field,
+            // folded in here so the derivative stays exact under Euler and RK4.
+            let b = p1, speedMult = p2, k = p3
+            return ((sin(y * k) - b * x) * speedMult,
+                    (sin(z * k) - b * y) * speedMult,
+                    (sin(x * k) - b * z) * speedMult)
 
         case .halvorsen:
-            // p1=alpha, p2=scale, p3=speed (both fold into the dt multiplier).
+            // p1=alpha; p2=scale and p3=speed are display-time multipliers folded
+            // into the field as a single constant factor m.
             let m = p2 * p3
-            let dx = -p1 * x - 4 * y - 4 * z - y * y
-            let dy = -p1 * y - 4 * z - 4 * x - z * z
-            let dz = -p1 * z - 4 * x - 4 * y - x * x
-            return (x + dx * dt * m, y + dy * dt * m, z + dz * dt * m)
+            return ((-p1 * x - 4 * y - 4 * z - y * y) * m,
+                    (-p1 * y - 4 * z - 4 * x - z * z) * m,
+                    (-p1 * z - 4 * x - 4 * y - x * x) * m)
 
         case .chen:
             // p1=alpha, p2=beta, p3=gamma.
-            let dx = p1 * (y - x)
-            let dy = (p3 - p1) * x - x * z + p3 * y
-            let dz = x * y - p2 * z
-            return (x + dx * dt, y + dy * dt, z + dz * dt)
+            return (p1 * (y - x),
+                    (p3 - p1) * x - x * z + p3 * y,
+                    x * y - p2 * z)
         }
     }
 }

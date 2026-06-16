@@ -27,6 +27,10 @@ public final class AttractiveEngine {
     /// Animation speed coefficient (1 = recommended).
     public var speed: Double = 1.0
 
+    /// Numerical integration scheme. RK4 holds the trajectory on the attractor
+    /// at step sizes where Euler visibly drifts — the difference is the lesson.
+    public var integrator: IntegratorKind = .rk4
+
     /// Extra view zoom multiplier on top of the attractor's recommended zoom.
     public var zoom: Double = 1.0
 
@@ -81,7 +85,7 @@ public final class AttractiveEngine {
 
         let dt = baseDt
         for _ in 0..<steps {
-            (x, y, z) = config.step(x, y, z, dt: dt)
+            (x, y, z) = config.step(x, y, z, dt: dt, integrator: integrator)
             appendProjected()
         }
         rotation += frameDt * 0.00012

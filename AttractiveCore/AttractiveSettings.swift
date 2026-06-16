@@ -31,6 +31,24 @@ public final class AttractiveSettings {
     /// Glow bloom on the trail stroke.
     public var glow: Bool         { didSet { write(glow, .glow) } }
 
+    // MARK: - Numerics / tuning
+
+    /// Numerical integration scheme. Surfaced to the learner so Euler↔RK4 is a
+    /// visible choice, not a hidden default.
+    public var integratorRaw: String { didSet { write(integratorRaw, .integratorRaw) } }
+
+    /// Per-attractor parameter overrides (p1, p2, p3), keyed by `AttractorID`
+    /// raw value. Absent keys fall back to registry defaults, so the slider UI
+    /// only persists what the user has actually tuned. Serialized as JSON.
+    @ObservationIgnored
+    private var paramOverrides: [String: [Double]] {
+        didSet { writeParamOverrides() }
+    }
+    /// Bump-on-write token so `@Observable` re-evaluates `currentConfig()` reads
+    /// when a parameter changes (the dictionary itself is observation-ignored to
+    /// keep the JSON write off the hot path).
+    public private(set) var paramRevision: Int
+
     // MARK: - Init
 
     private init() {
@@ -43,6 +61,14 @@ public final class AttractiveSettings {
         self.hue       = Self.readDouble(suite, .hue, default: 0.55)
         self.lineWidth = Self.readDouble(suite, .lineWidth, default: 1.2)
         self.glow      = Self.readBool(suite, .glow, default: true)
+        self.integratorRaw = suite.string(forKey: Key.integratorRaw.rawValue) ?? IntegratorKind.rk4.rawValue
+        if let data = suite.data(forKey: Key.paramOverrides.rawValue),
+           let decoded = try? JSONDecoder().decode([String: [Double]].self, from: data) {
+            self.paramOverrides = decoded
+        } else {
+            self.paramOverrides = [:]
+        }
+        self.paramRevision = 0
     }
 
     // MARK: - Derived
@@ -52,15 +78,70 @@ public final class AttractiveSettings {
         set { attractorRaw = newValue.rawValue }
     }
 
-    /// Build a fresh `AttractorConfig` from defaults for the current selection.
+    public var integrator: IntegratorKind {
+        get { IntegratorKind(rawValue: integratorRaw) ?? .rk4 }
+        set { integratorRaw = newValue.rawValue }
+    }
+
+    /// Build the `AttractorConfig` for the current selection, applying any user
+    /// parameter overrides on top of the registry defaults.
     public func currentConfig() -> AttractorConfig {
-        AttractorRegistry.defaultConfig(for: attractor)
+        _ = paramRevision // read so `@Observable` tracks tuning as a dependency
+        var config = AttractorRegistry.defaultConfig(for: attractor)
+        if let o = paramOverrides[attractor.rawValue], o.count == 3 {
+            config.p1 = o[0]; config.p2 = o[1]; config.p3 = o[2]
+        }
+        return config
+    }
+
+    /// Current value of one tunable parameter for the selected attractor,
+    /// honoring overrides — the source of truth for slider positions.
+    public func parameter(_ slot: ParameterInfo.Slot) -> Double {
+        let c = currentConfig()
+        switch slot {
+        case .p1: return c.p1
+        case .p2: return c.p2
+        case .p3: return c.p3
+        }
+    }
+
+    /// Set one tunable parameter for the selected attractor and persist it.
+    /// Drives live re-integration via `currentConfig()` reads.
+    public func setParameter(_ slot: ParameterInfo.Slot, _ value: Double) {
+        let c = currentConfig()
+        var trio = [c.p1, c.p2, c.p3]
+        switch slot {
+        case .p1: trio[0] = value
+        case .p2: trio[1] = value
+        case .p3: trio[2] = value
+        }
+        paramOverrides[attractor.rawValue] = trio
+        paramRevision &+= 1
+    }
+
+    /// Discard tuning for the selected attractor, returning it to canonical
+    /// parameters.
+    public func resetParameters() {
+        paramOverrides[attractor.rawValue] = nil
+        paramRevision &+= 1
+    }
+
+    /// Whether the selected attractor currently differs from its defaults.
+    public var hasParameterOverrides: Bool {
+        _ = paramRevision
+        return paramOverrides[attractor.rawValue] != nil
     }
 
     // MARK: - Storage primitives
 
     private enum Key: String, CaseIterable {
-        case attractorRaw, speed, zoom, hue, lineWidth, glow
+        case attractorRaw, speed, zoom, hue, lineWidth, glow, integratorRaw, paramOverrides
+    }
+
+    private func writeParamOverrides() {
+        if let data = try? JSONEncoder().encode(paramOverrides) {
+            defaults.set(data, forKey: Key.paramOverrides.rawValue)
+        }
     }
 
     private func write<T>(_ value: T, _ key: Key) {
