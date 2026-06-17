@@ -148,6 +148,74 @@ final class LyapunovTests: XCTestCase {
     }
 }
 
+final class BoundsFramingTests: XCTestCase {
+
+    /// Every attractor must yield a finite, non-degenerate steady-state bounding
+    /// box from the up-front estimator — the basis for auto-fit framing in both
+    /// the 2D Canvas and the 3D phase space.
+    func testEstimateBoundsNonDegenerateForAllAttractors() {
+        for id in AttractorID.allCases {
+            let cfg = AttractorRegistry.defaultConfig(for: id)
+            let b = AttractiveEngine.estimateBounds(config: cfg)
+            XCTAssertTrue(b.min.x.isFinite && b.min.y.isFinite && b.min.z.isFinite,
+                          "\(id) bounds.min must be finite")
+            XCTAssertTrue(b.max.x.isFinite && b.max.y.isFinite && b.max.z.isFinite,
+                          "\(id) bounds.max must be finite")
+            XCTAssertGreaterThan(b.extent, 0.1, "\(id) must occupy real model-space volume")
+            XCTAssertTrue(b.center.x >= b.min.x && b.center.x <= b.max.x, "\(id) center inside box (x)")
+            XCTAssertTrue(b.center.z >= b.min.z && b.center.z <= b.max.z, "\(id) center inside box (z)")
+        }
+    }
+
+    /// Lorenz geometry sanity: the butterfly is centered well above the origin in
+    /// z and spans tens of model units — guards against framing on the wrong
+    /// center (the old 3D camera assumed the world origin).
+    func testLorenzBoundsMatchKnownGeometry() {
+        let b = AttractiveEngine.estimateBounds(config: AttractorRegistry.defaultConfig(for: .lorenz))
+        XCTAssertGreaterThan(b.center.z, 10, "Lorenz is centered well above the origin in z")
+        XCTAssertLessThan(b.center.z, 45)
+        XCTAssertGreaterThan(b.extent, 30, "Lorenz butterfly spans tens of model units")
+        XCTAssertLessThan(b.extent, 140)
+    }
+
+    /// The estimate must be deterministic — same config in, same bounds out.
+    func testEstimateBoundsDeterministic() {
+        let cfg = AttractorRegistry.defaultConfig(for: .aizawa)
+        let a = AttractiveEngine.estimateBounds(config: cfg)
+        let b = AttractiveEngine.estimateBounds(config: cfg)
+        XCTAssertEqual(a.min.x, b.min.x, accuracy: 0)
+        XCTAssertEqual(a.max.z, b.max.z, accuracy: 0)
+        XCTAssertEqual(a.extent, b.extent, accuracy: 0)
+    }
+
+    /// `regenerate` must publish `modelBounds` reflecting the current config so
+    /// both renderers can frame the attractor before the first point is drawn.
+    func testRegeneratePublishesModelBounds() {
+        let engine = AttractiveEngine(config: AttractorRegistry.defaultConfig(for: .lorenz))
+        engine.regenerate(width: 400, height: 400)
+        XCTAssertGreaterThan(engine.modelBounds.extent, 30)
+        XCTAssertGreaterThan(engine.modelBounds.center.z, 10)
+    }
+
+    /// The 2D auto-fit must fill a healthy fraction of the canvas — the whole
+    /// point of the fix. The old fixed-scale projection rendered Lorenz at only a
+    /// few dozen pixels on an 800px canvas.
+    func testAutoFitFillsCanvas() {
+        let engine = AttractiveEngine(config: AttractorRegistry.defaultConfig(for: .lorenz))
+        engine.regenerate(width: 800, height: 800)
+        for k in 1...600 { engine.advance(timeMs: Double(k) * 16.0) }
+        var minX = Double.greatestFiniteMagnitude, maxX = -Double.greatestFiniteMagnitude
+        var minY = Double.greatestFiniteMagnitude, maxY = -Double.greatestFiniteMagnitude
+        engine.points.forEachOrdered { p in
+            minX = Swift.min(minX, p.x); maxX = Swift.max(maxX, p.x)
+            minY = Swift.min(minY, p.y); maxY = Swift.max(maxY, p.y)
+        }
+        let projectedSpan = Swift.max(maxX - minX, maxY - minY)
+        XCTAssertGreaterThan(projectedSpan, 300, "Attractor must fill the canvas, not render tiny")
+        XCTAssertLessThan(projectedSpan, 800, "…but stay within it")
+    }
+}
+
 final class IntegratorTests: XCTestCase {
 
     /// Euler step must equal the explicit forward-Euler formula from the

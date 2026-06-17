@@ -44,7 +44,6 @@ final class PhaseSpaceCoordinator: NSObject, SCNSceneRendererDelegate, UIGesture
     // Clock.
     private var firstTime: TimeInterval = 0
     private var started = false
-    private var framedOnce = false
 
     // HUD telemetry (written throttled, on the main actor).
     var hud: PhaseHUDModel?
@@ -129,12 +128,12 @@ final class PhaseSpaceCoordinator: NSObject, SCNSceneRendererDelegate, UIGesture
                 engine.tracksCompanion = sensitive
                 engine.computesLyapunov = lyapunov
                 engine.regenerate(width: 400, height: 400, config: config)
+                frameToModelBoundsLocked()
             }
         }
         if mustRegenerate {
             companionTrail.clear()
             started = false
-            framedOnce = false
             Task { @MainActor [weak self] in self?.hud?.reset() }
         }
         // Orbit radius responds to the zoom control.
@@ -159,7 +158,6 @@ final class PhaseSpaceCoordinator: NSObject, SCNSceneRendererDelegate, UIGesture
             if sensitive {
                 companionTrail.update(points: engine.companionPoints3D, rgb: companionRgb)
             }
-            frameCameraIfNeededLocked()
             return (engine.state,
                     sensitive ? engine.separation : nil,
                     lyapunov ? engine.lyapunov.current : nil,
@@ -182,24 +180,17 @@ final class PhaseSpaceCoordinator: NSObject, SCNSceneRendererDelegate, UIGesture
         }
     }
 
-    /// Centre the orbit on the attractor and choose a pull-back distance from
-    /// the trail's *current* extent. Recomputed from the live buffer (not the
-    /// monotonic running bounds, which retain inflated startup transients), and
-    /// deferred until the trajectory has had time to settle. Caller holds the
-    /// engine lock.
-    private func frameCameraIfNeededLocked() {
-        guard !framedOnce, engine.points3D.count > 1500 else { return }
-        var lo = SIMD3<Float>(repeating: .greatestFiniteMagnitude)
-        var hi = SIMD3<Float>(repeating: -.greatestFiniteMagnitude)
-        engine.points3D.forEachOrdered { p in lo = simd_min(lo, p); hi = simd_max(hi, p) }
-        guard lo.x.isFinite, hi.x.isFinite else { return }
-        let center = (lo + hi) * 0.5
-        cameraOrbit.position = SCNVector3(center.x, center.y, center.z)
-        let extent = simd_length(hi - lo)
-        baseRadius = CGFloat(max(extent, 1)) * 1.2
-        orbitRadius = baseRadius
-        cameraNode.position = SCNVector3(0, 0, orbitRadius)
-        framedOnce = true
+    /// Frame the camera on the attractor's pre-estimated steady-state bounds the
+    /// moment it's (re)generated, so it fills the view on load instead of
+    /// starting tiny and snapping into frame once enough points accumulate. The
+    /// estimate ignores startup transients, so the centre and pull-back are
+    /// correct from the first frame. Caller holds the engine lock; the user-zoom
+    /// pull-back (`orbitRadius`) is applied by `apply(...)` afterwards.
+    private func frameToModelBoundsLocked() {
+        let b = engine.modelBounds
+        guard b.extent.isFinite, b.extent > 0 else { return }
+        cameraOrbit.position = SCNVector3(Float(b.center.x), Float(b.center.y), Float(b.center.z))
+        baseRadius = CGFloat(max(b.extent, 1)) * 1.2
     }
 
     // MARK: - Gestures (camera; inspection added in Phase 8)
@@ -249,7 +240,6 @@ final class PhaseSpaceCoordinator: NSObject, SCNSceneRendererDelegate, UIGesture
         locked { engine.reseed(at: SIMD3<Double>(Double(p.x), Double(p.y), Double(p.z))) }
         markerNode.isHidden = true
         started = false
-        framedOnce = false
         Task { @MainActor [weak self] in self?.hud?.reset() }
     }
 

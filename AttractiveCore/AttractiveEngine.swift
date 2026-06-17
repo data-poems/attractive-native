@@ -2,6 +2,25 @@ import Foundation
 import CoreGraphics
 import simd
 
+/// A steady-state model-space bounding box for an attractor, used to frame it on
+/// load (camera pull-back in 3D, projection scale in 2D) so it fills the view
+/// immediately instead of starting tiny and snapping into frame.
+public struct ModelBounds: Equatable, Sendable {
+    public var min: SIMD3<Double>
+    public var max: SIMD3<Double>
+
+    public init(min: SIMD3<Double>, max: SIMD3<Double>) {
+        self.min = min
+        self.max = max
+    }
+
+    /// Centre of the box.
+    public var center: SIMD3<Double> { (min + max) * 0.5 }
+    /// Diagonal length of the box — a rotation-invariant size that fits the whole
+    /// attractor at any viewing angle.
+    public var extent: Double { simd_length(max - min) }
+}
+
 /// Integrates a single strange attractor and maintains a rolling trail of
 /// recently-visited points — both as raw 3D model-space coordinates (for the
 /// SceneKit phase space) and projected to 2D (for the Canvas). Modeled on
@@ -59,6 +78,12 @@ public final class AttractiveEngine {
     public private(set) var boundsMin = SIMD3<Float>(repeating: .greatestFiniteMagnitude)
     public private(set) var boundsMax = SIMD3<Float>(repeating: -.greatestFiniteMagnitude)
 
+    /// Steady-state bounding box of the current attractor, estimated up front at
+    /// `regenerate` time so both renderers can frame it before the first point is
+    /// drawn. Unlike the running bounds above, this is not inflated by startup
+    /// transients.
+    public private(set) var modelBounds = ModelBounds(min: .zero, max: .zero)
+
     // MARK: Companion trajectory (sensitive dependence)
 
     /// When true, a second trajectory starting `epsilon` away is integrated in
@@ -99,6 +124,7 @@ public final class AttractiveEngine {
         self.width = width
         self.height = height
         if let config { self.config = config }
+        modelBounds = Self.estimateBounds(config: self.config, integrator: integrator)
 
         let p = self.config.initPos
         x = p.count > 0 ? p[0] : 0.1
@@ -188,20 +214,64 @@ public final class AttractiveEngine {
     }
 
     /// Project the current 3D point to canvas space and append to the trail.
+    /// Auto-fits to the estimated `modelBounds`: centre the attractor, rotate
+    /// about the vertical axis for a sense of depth, then scale its
+    /// rotation-invariant bounding sphere into ~80% of the view. This replaces
+    /// the old per-attractor `scale` constants, which rendered several systems
+    /// only tens of pixels wide.
     private func appendProjected() {
         guard width > 1, height > 1 else { return }
-        let s = config.scale * config.recommendedZoom * zoom
-        // Simple rotation about the vertical axis for a sense of depth, then
-        // orthographic projection (x,z used for screen; y modulates a little).
+        let c = modelBounds.center
+        let extent = Swift.max(modelBounds.extent, 1e-6)
         let cosR = cos(rotation), sinR = sin(rotation)
-        let rx = x * cosR - z * sinR
-        let rz = x * sinR + z * cosR
+        let dx = x - c.x, dy = y - c.y, dz = z - c.z
+        let rx = dx * cosR - dz * sinR
+        let rz = dx * sinR + dz * cosR
         let span = min(width, height)
-        let unit = span / 60.0 // model units → points, before scale
-        let px = width / 2 + rx * unit * (s / 60.0)
-        let py = height / 2 - (y * 0.6 + rz * 0.4) * unit * (s / 60.0)
+        let fit = 0.8 * span / extent * Swift.max(0.05, zoom)
+        let px = width / 2 + rx * fit
+        let py = height / 2 - (dy * 0.6 + rz * 0.4) * fit
 
         points.append(CGPoint(x: px, y: py))   // ring buffer evicts oldest, O(1)
+    }
+
+    /// Estimate the steady-state model-space bounding box of an attractor by
+    /// integrating it from its seed, discarding the startup transient, and
+    /// accumulating min/max over a representative window. Pure and deterministic.
+    public static func estimateBounds(config: AttractorConfig,
+                                      integrator: IntegratorKind = .rk4,
+                                      warmupSteps: Int = 2000,
+                                      sampleSteps: Int = 8000,
+                                      dt: Double = 0.005) -> ModelBounds {
+        let p = config.initPos
+        var x = p.count > 0 ? p[0] : 0.1
+        var y = p.count > 1 ? p[1] : 0.0
+        var z = p.count > 2 ? p[2] : 0.0
+
+        // Burn off the startup transient so the box reflects the attractor, not
+        // the path the trajectory took to reach it.
+        for _ in 0..<Swift.max(0, warmupSteps) {
+            (x, y, z) = config.step(x, y, z, dt: dt, integrator: integrator)
+        }
+
+        var lo = SIMD3<Double>(repeating: .greatestFiniteMagnitude)
+        var hi = SIMD3<Double>(repeating: -.greatestFiniteMagnitude)
+        var sampled = false
+        for _ in 0..<Swift.max(1, sampleSteps) {
+            (x, y, z) = config.step(x, y, z, dt: dt, integrator: integrator)
+            guard x.isFinite, y.isFinite, z.isFinite else { continue }
+            let v = SIMD3<Double>(x, y, z)
+            lo = simd_min(lo, v); hi = simd_max(hi, v); sampled = true
+        }
+
+        guard sampled else {
+            // Pathological config (immediate non-finite) — fall back to a small
+            // unit box at the seed so framing math stays well-defined.
+            let c = SIMD3<Double>(x.isFinite ? x : 0, y.isFinite ? y : 0, z.isFinite ? z : 0)
+            return ModelBounds(min: c - SIMD3<Double>(repeating: 0.5),
+                               max: c + SIMD3<Double>(repeating: 0.5))
+        }
+        return ModelBounds(min: lo, max: hi)
     }
 
     /// The full trail as a single CGPath polyline.

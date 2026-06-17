@@ -77,7 +77,7 @@ public final class AttractiveSettings {
         self.lineWidth = Self.readDouble(suite, .lineWidth, default: 1.2)
         self.glow      = Self.readBool(suite, .glow, default: true)
         self.integratorRaw = suite.string(forKey: Key.integratorRaw.rawValue) ?? IntegratorKind.rk4.rawValue
-        self.viewModeRaw = suite.string(forKey: Key.viewModeRaw.rawValue) ?? ViewMode.canvas2D.rawValue
+        self.viewModeRaw = suite.string(forKey: Key.viewModeRaw.rawValue) ?? ViewMode.scene3D.rawValue
         self.sensitiveDependence = Self.readBool(suite, .sensitiveDependence, default: false)
         self.showLyapunov = Self.readBool(suite, .showLyapunov, default: false)
         if let data = suite.data(forKey: Key.paramOverrides.rawValue),
@@ -94,6 +94,17 @@ public final class AttractiveSettings {
             self.completedLessons = []
         }
         self.lessonRevision = 0
+
+        // One-time migration: 3D is now the default view. Installs that saved a
+        // 2D preference before this change are flipped to 3D exactly once so
+        // everyone lands in the richer phase space. A later manual switch to 2D
+        // still persists — we never re-flip. (Property `didSet` write-through
+        // doesn't fire during `init`, so the values are written explicitly.)
+        if !suite.bool(forKey: Key.didMigrateViewModeTo3D.rawValue) {
+            self.viewModeRaw = ViewMode.scene3D.rawValue
+            suite.set(ViewMode.scene3D.rawValue, forKey: Key.viewModeRaw.rawValue)
+            suite.set(true, forKey: Key.didMigrateViewModeTo3D.rawValue)
+        }
     }
 
     // MARK: - Derived
@@ -193,6 +204,7 @@ public final class AttractiveSettings {
     private enum Key: String, CaseIterable {
         case attractorRaw, speed, zoom, hue, lineWidth, glow, integratorRaw, paramOverrides
         case viewModeRaw, sensitiveDependence, showLyapunov, completedLessons
+        case didMigrateViewModeTo3D
     }
 
     private func writeParamOverrides() {
