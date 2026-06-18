@@ -107,67 +107,82 @@ final class PhaseSpaceCoordinator: NSObject, SCNSceneRendererDelegate, UIGesture
     func apply(config: AttractorConfig, speed: Double, zoom: Double,
                hue: Double, glow: Bool, integrator: IntegratorKind,
                sensitive: Bool, lyapunov: Bool) {
-        self.hue = hue
-        self.glow = glow
-
-        let configChanged = (self.config != config)
-        let sensitivityChanged = (self.sensitive != sensitive)
-        let lyapunovChanged = (self.lyapunov != lyapunov)
-        self.config = config
-        self.sensitive = sensitive
-        self.lyapunov = lyapunov
-
-        cameraNode.camera?.bloomIntensity = glow ? Self.bloomLevel : 0
-
-        let mustRegenerate = configChanged || sensitivityChanged || lyapunovChanged || !started
-        locked {
+        // All state shared with the render thread is read/written under the lock.
+        // `framingCenter` is captured here and applied to the camera afterwards,
+        // so SceneKit node mutations happen outside the lock in one transaction.
+        let result: (mustRegenerate: Bool, framingCenter: SIMD3<Float>?) = locked {
+            let changed = (self.config != config) || (self.sensitive != sensitive)
+                || (self.lyapunov != lyapunov) || !started
+            self.hue = hue
+            self.glow = glow
+            self.config = config
+            self.sensitive = sensitive
+            self.lyapunov = lyapunov
             engine.speed = speed
             engine.zoom = zoom
             engine.integrator = integrator
-            if mustRegenerate {
+
+            var framingCenter: SIMD3<Float>? = nil
+            if changed {
                 engine.tracksCompanion = sensitive
                 engine.computesLyapunov = lyapunov
                 engine.regenerate(width: 400, height: 400, config: config)
-                frameToModelBoundsLocked()
+                companionTrail.clear()
+                started = false
+                let b = engine.modelBounds
+                if b.extent.isFinite, b.extent > 0 {
+                    baseRadius = CGFloat(max(b.extent, 1)) * 1.2
+                    framingCenter = SIMD3(Float(b.center.x), Float(b.center.y), Float(b.center.z))
+                }
             }
+            return (changed, framingCenter)
         }
-        if mustRegenerate {
-            companionTrail.clear()
-            started = false
-            Task { @MainActor [weak self] in self?.hud?.reset() }
+
+        // SceneKit node mutations on the main thread — batch in one transaction.
+        SCNTransaction.begin()
+        SCNTransaction.disableActions = true
+        if let c = result.framingCenter {
+            cameraOrbit.position = SCNVector3(c.x, c.y, c.z)
         }
-        // Orbit radius responds to the zoom control.
+        cameraNode.camera?.bloomIntensity = glow ? Self.bloomLevel : 0
         orbitRadius = baseRadius / max(0.2, CGFloat(zoom))
         cameraNode.position = SCNVector3(0, 0, orbitRadius)
+        SCNTransaction.commit()
+
+        if result.mustRegenerate {
+            Task { @MainActor [weak self] in self?.hud?.reset() }
+        }
     }
 
     // MARK: - Render loop
 
     func renderer(_ renderer: SCNSceneRenderer, updateAtTime time: TimeInterval) {
-        if !started { started = true; firstTime = time }
-        let elapsedMs = (time - firstTime) * 1000.0
+        // Advance and read every piece of shared state under the lock so a
+        // concurrent main-thread apply()/reseed() can't tear it.
+        let snapshot: (state: SIMD3<Double>, sep: Double?, lyap: Double?,
+                       warm: Bool, sensitive: Bool, lyapunov: Bool) = locked {
+            if !started { started = true; firstTime = time }
+            let elapsedMs = (time - firstTime) * 1000.0
+            let sensitive = self.sensitive
+            let lyapunov = self.lyapunov
+            let rgb = Self.rgb(hue: hue)
 
-        let rgb = Self.rgb(hue: hue)
-        let companionRgb = Self.rgb(hue: (hue + 0.5).truncatingRemainder(dividingBy: 1))
-
-        // Advance and read all engine state under the lock so a concurrent
-        // main-thread apply()/reseed() can't tear it.
-        let snapshot: (state: SIMD3<Double>, sep: Double?, lyap: Double?, warm: Bool) = locked {
             engine.advance(timeMs: elapsedMs)
             trail.update(points: engine.points3D, rgb: rgb)
             if sensitive {
+                let companionRgb = Self.rgb(hue: (hue + 0.5).truncatingRemainder(dividingBy: 1))
                 companionTrail.update(points: engine.companionPoints3D, rgb: companionRgb)
             }
             return (engine.state,
                     sensitive ? engine.separation : nil,
                     lyapunov ? engine.lyapunov.current : nil,
-                    engine.lyapunov.warm)
+                    engine.lyapunov.warm, sensitive, lyapunov)
         }
 
         headNode.position = SCNVector3(Float(snapshot.state.x), Float(snapshot.state.y), Float(snapshot.state.z))
 
         // Throttled HUD telemetry (~10 Hz) — hop to the main actor.
-        if (sensitive || lyapunov), time - lastHUDTime > 0.1 {
+        if (snapshot.sensitive || snapshot.lyapunov), time - lastHUDTime > 0.1 {
             lastHUDTime = time
             let sep = snapshot.sep, lyap = snapshot.lyap, warm = snapshot.warm
             Task { @MainActor [weak self] in
@@ -178,19 +193,6 @@ final class PhaseSpaceCoordinator: NSObject, SCNSceneRendererDelegate, UIGesture
                 }
             }
         }
-    }
-
-    /// Frame the camera on the attractor's pre-estimated steady-state bounds the
-    /// moment it's (re)generated, so it fills the view on load instead of
-    /// starting tiny and snapping into frame once enough points accumulate. The
-    /// estimate ignores startup transients, so the centre and pull-back are
-    /// correct from the first frame. Caller holds the engine lock; the user-zoom
-    /// pull-back (`orbitRadius`) is applied by `apply(...)` afterwards.
-    private func frameToModelBoundsLocked() {
-        let b = engine.modelBounds
-        guard b.extent.isFinite, b.extent > 0 else { return }
-        cameraOrbit.position = SCNVector3(Float(b.center.x), Float(b.center.y), Float(b.center.z))
-        baseRadius = CGFloat(max(b.extent, 1)) * 1.2
     }
 
     // MARK: - Gestures (camera; inspection added in Phase 8)
@@ -237,9 +239,11 @@ final class PhaseSpaceCoordinator: NSObject, SCNSceneRendererDelegate, UIGesture
         guard g.state == .began,
               let view = g.view as? SCNView,
               let p = nearestTrailPoint(to: g.location(in: view), in: view) else { return }
-        locked { engine.reseed(at: SIMD3<Double>(Double(p.x), Double(p.y), Double(p.z))) }
+        locked {
+            engine.reseed(at: SIMD3<Double>(Double(p.x), Double(p.y), Double(p.z)))
+            started = false   // shared with the render thread; reset under the lock
+        }
         markerNode.isHidden = true
-        started = false
         Task { @MainActor [weak self] in self?.hud?.reset() }
     }
 
