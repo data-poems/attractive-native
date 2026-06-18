@@ -9,7 +9,6 @@ struct PhaseSpaceView: UIViewRepresentable {
     let speed: Double
     let zoom: Double
     let hue: Double
-    let lineWidth: Double
     let glow: Bool
     let integrator: IntegratorKind
     let sensitive: Bool

@@ -157,6 +157,11 @@ private struct BifurcationTrack: View {
                             .onTapGesture { onTap(b) }
                     }
                     .position(x: thumbInset + usable * f, y: geo.size.height / 2)
+                    .accessibilityElement()
+                    .accessibilityLabel("\(b.label), \(info.symbol) equals \(String(format: "%g", b.value))")
+                    .accessibilityHint(b.detail)
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityAction { onTap(b) }
             }
         }
         .frame(height: 28)

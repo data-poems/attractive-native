@@ -9,6 +9,9 @@ struct LaTeXLine: UIViewRepresentable {
     let latex: String
     var color: UIColor = .white
     var fontSize: CGFloat = 20
+    /// Spoken form for VoiceOver. Defaults to a reduction of the LaTeX; pass an
+    /// explicit phrase when the heuristic reads awkwardly.
+    var spokenLabel: String? = nil
 
     func makeUIView(context: Context) -> MTMathUILabel {
         let label = MTMathUILabel()
@@ -29,6 +32,35 @@ struct LaTeXLine: UIViewRepresentable {
         label.fontSize = fontSize
         label.setContentHuggingPriority(.required, for: .vertical)
         label.setContentCompressionResistancePriority(.required, for: .vertical)
+        // The label renders math as glyphs (silent to VoiceOver) — give it a
+        // spoken equivalent so the equations aren't lost to assistive tech.
+        label.isAccessibilityElement = true
+        label.accessibilityLabel = spokenLabel ?? Self.speak(latex)
+    }
+
+    /// Reduce the LaTeX used in this app to an intelligible spoken phrase.
+    static func speak(_ latex: String) -> String {
+        var s = latex
+        // Fractions: \tfrac{a}{b} / \frac{a}{b} -> "a over b".
+        s = s.replacingOccurrences(
+            of: #"\\t?frac\{([^{}]*)\}\{([^{}]*)\}"#,
+            with: " $1 over $2 ", options: .regularExpression)
+        // Derivative: \dot{x} -> "x dot".
+        s = s.replacingOccurrences(
+            of: #"\\dot\{([^{}]*)\}"#, with: " $1 dot ", options: .regularExpression)
+        let words: [(String, String)] = [
+            ("\\sigma", " sigma "), ("\\rho", " rho "), ("\\beta", " beta "),
+            ("\\alpha", " alpha "), ("\\lambda", " lambda "), ("\\delta", " delta "),
+            ("\\approx", " approximately "), ("\\sin", " sine "), ("\\,", " "),
+            ("^{3}", " cubed "), ("^3", " cubed "), ("^{2}", " squared "), ("^2", " squared "),
+            ("_{1}", " one "), ("_1", " one "), ("_{0}", " naught "), ("_0", " naught "),
+            ("=", " equals "), ("+", " plus "), ("-", " minus "), ("*", " times "), ("/", " over "),
+            ("{", " "), ("}", " "), ("\\", " "), ("(", " open paren "), (")", " close paren "),
+        ]
+        for (from, to) in words { s = s.replacingOccurrences(of: from, with: to) }
+        // Collapse runs of whitespace.
+        s = s.replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+        return s.trimmingCharacters(in: .whitespaces)
     }
 
     @available(iOS 16.0, *)

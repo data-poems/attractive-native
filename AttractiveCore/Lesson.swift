@@ -115,8 +115,8 @@ public enum LessonRegistry {
                 preset: LessonPreset(attractor: .lorenz, parameters: [.p2: 0.8], viewMode: .scene3D)),
             LessonStep(id: 2,
                 title: "Losing stability",
-                body: "Raise ρ past 1 and the origin gives way to two new fixed points — steady convection rolls. Push ρ higher still and those lose stability too. Open the Tune panel and sweep ρ to feel the handoff.",
-                preset: LessonPreset(attractor: .lorenz, parameters: [.p2: 14], viewMode: .scene3D)),
+                body: "Raise ρ past 1 and the origin gives way to two new fixed points — steady convection rolls, stable up to about ρ ≈ 24.74. Past that threshold they lose stability and the trajectory can no longer settle: this is the chaotic attractor. Open the Tune panel and sweep ρ to feel the handoff.",
+                preset: LessonPreset(attractor: .lorenz, parameters: [.p2: 25], viewMode: .scene3D)),
         ])
 
     static let limitCycles = Lesson(

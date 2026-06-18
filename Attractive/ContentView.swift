@@ -13,7 +13,6 @@ struct ContentView: View {
 
     @State private var settings = AttractiveSettings.shared
     @State private var hud = PhaseHUDModel()
-    @State private var canvasSize: CGSize = .zero
     @State private var activeSheet: ActiveSheet?
     @State private var inspectorVisible = false
 
@@ -28,7 +27,6 @@ struct ContentView: View {
                                        speed: settings.speed,
                                        zoom: settings.zoom,
                                        hue: settings.hue,
-                                       lineWidth: settings.lineWidth,
                                        glow: settings.glow,
                                        integrator: settings.integrator,
                                        sensitive: settings.sensitiveDependence,
@@ -48,8 +46,6 @@ struct ContentView: View {
                             .id(ViewMode.canvas2D)
                     }
                 }
-                .onAppear { canvasSize = geo.size }
-                .onChange(of: geo.size) { _, new in canvasSize = new }
             }
             .ignoresSafeArea()
             .accessibilityElement(children: .ignore)
@@ -125,7 +121,9 @@ struct ContentView: View {
 
             // Look cluster.
             controlButton(system: settings.viewMode == .scene3D ? "cube" : "square.on.square",
-                          label: settings.viewMode.displayName) {
+                          label: settings.viewMode.displayName,
+                          a11yLabel: settings.viewMode == .scene3D
+                              ? "Switch to 2D canvas" : "Switch to 3D phase space") {
                 settings.viewMode = settings.viewMode == .scene3D ? .canvas2D : .scene3D
             }
             controlButton(system: "paintbrush.pointed", label: "Style") {
@@ -145,14 +143,16 @@ struct ContentView: View {
         }
     }
 
-    private func controlButton(system: String, label: String, action: @escaping () -> Void) -> some View {
+    private func controlButton(system: String, label: String, a11yLabel: String? = nil,
+                               action: @escaping () -> Void) -> some View {
         Button(action: action) {
             VStack(spacing: 5) {
                 Image(systemName: system)
                     .font(.system(size: 20, weight: .regular))
                     .frame(height: 26)
                 Text(label)
-                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    // Scales with Dynamic Type (capped so the bar stays usable).
+                    .font(.system(.caption2, design: .monospaced).weight(.medium))
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
             }
@@ -161,7 +161,8 @@ struct ContentView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(label)
+        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+        .accessibilityLabel(a11yLabel ?? label)
     }
 }
 

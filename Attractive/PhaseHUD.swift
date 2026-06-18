@@ -170,5 +170,6 @@ private struct Sparkline: View {
                 .stroke(color, style: StrokeStyle(lineWidth: 1.5, lineJoin: .round))
             }
         }
+        .accessibilityHidden(true)   // the separation value is announced as text
     }
 }

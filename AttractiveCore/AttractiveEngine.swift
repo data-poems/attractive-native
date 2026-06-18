@@ -74,10 +74,6 @@ public final class AttractiveEngine {
     /// Current head state in model space.
     public var state: SIMD3<Double> { SIMD3(x, y, z) }
 
-    /// Running model-space bounding box of the 3D trail, for camera framing.
-    public private(set) var boundsMin = SIMD3<Float>(repeating: .greatestFiniteMagnitude)
-    public private(set) var boundsMax = SIMD3<Float>(repeating: -.greatestFiniteMagnitude)
-
     /// Steady-state bounding box of the current attractor, estimated up front at
     /// `regenerate` time so both renderers can frame it before the first point is
     /// drawn. Unlike the running bounds above, this is not inflated by startup
@@ -135,8 +131,6 @@ public final class AttractiveEngine {
         points.removeAll(keepingCapacity: true)
         points3D.removeAll()
         companionPoints3D.removeAll()
-        boundsMin = SIMD3<Float>(repeating: .greatestFiniteMagnitude)
-        boundsMax = SIMD3<Float>(repeating: -.greatestFiniteMagnitude)
         headIndex = 0
         prevTimeMs = 0
         started = false
@@ -153,8 +147,6 @@ public final class AttractiveEngine {
         points.removeAll(keepingCapacity: true)
         points3D.removeAll()
         companionPoints3D.removeAll()
-        boundsMin = SIMD3<Float>(repeating: .greatestFiniteMagnitude)
-        boundsMax = SIMD3<Float>(repeating: -.greatestFiniteMagnitude)
         headIndex = 0
         prevTimeMs = 0
         started = false
@@ -205,12 +197,9 @@ public final class AttractiveEngine {
         return true
     }
 
-    /// Append the current 3D point and grow the bounding box.
+    /// Append the current 3D point to the trail.
     private func append3D() {
-        let p = SIMD3<Float>(Float(x), Float(y), Float(z))
-        points3D.append(p)
-        boundsMin = simd_min(boundsMin, p)
-        boundsMax = simd_max(boundsMax, p)
+        points3D.append(SIMD3<Float>(Float(x), Float(y), Float(z)))
     }
 
     /// Project the current 3D point to canvas space and append to the trail.

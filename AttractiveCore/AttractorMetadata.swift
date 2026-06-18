@@ -213,9 +213,9 @@ public enum AttractorMetadataRegistry {
             return AttractorMetadata(
                 id: .thomas,
                 systemLatex: [
-                    "\\dot{x} = \\sin(y) - b\\,x",
-                    "\\dot{y} = \\sin(z) - b\\,y",
-                    "\\dot{z} = \\sin(x) - b\\,z",
+                    "\\dot{x} = \\sin(k\\,y) - b\\,x",
+                    "\\dot{y} = \\sin(k\\,z) - b\\,y",
+                    "\\dot{z} = \\sin(k\\,x) - b\\,z",
                 ],
                 parameters: [
                     ParameterInfo(slot: .p1, symbol: "b", name: "Dissipation",

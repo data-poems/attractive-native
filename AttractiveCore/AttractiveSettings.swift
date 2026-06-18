@@ -120,7 +120,9 @@ public final class AttractiveSettings {
     }
 
     public var viewMode: ViewMode {
-        get { ViewMode(rawValue: viewModeRaw) ?? .canvas2D }
+        // Fallback matches the init/default (3D) so a corrupted raw value can't
+        // silently drop the user into the 2D canvas.
+        get { ViewMode(rawValue: viewModeRaw) ?? .scene3D }
         set { viewModeRaw = newValue.rawValue }
     }
 
