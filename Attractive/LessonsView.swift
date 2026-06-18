@@ -8,7 +8,7 @@ struct LessonsHomeView: View {
     @Environment(\.dismiss) private var dismiss
 
     private var accent: Color {
-        Color(hue: settings.hue, saturation: 0.85, brightness: 1.0)
+        settings.accentColor
     }
 
     var body: some View {
@@ -70,7 +70,7 @@ struct LessonPlayerView: View {
     private var step: LessonStep { lesson.steps[index] }
     private var isLast: Bool { index == lesson.steps.count - 1 }
     private var accent: Color {
-        Color(hue: settings.hue, saturation: 0.85, brightness: 1.0)
+        settings.accentColor
     }
 
     var body: some View {

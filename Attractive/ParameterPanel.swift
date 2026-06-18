@@ -58,7 +58,7 @@ private struct ParameterSliderRow: View {
     @State private var selectedBifurcation: ParameterInfo.Bifurcation?
 
     private var accent: Color {
-        Color(hue: settings.hue, saturation: 0.85, brightness: 1.0)
+        settings.accentColor
     }
 
     var body: some View {

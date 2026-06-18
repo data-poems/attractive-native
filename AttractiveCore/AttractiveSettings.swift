@@ -203,7 +203,7 @@ public final class AttractiveSettings {
 
     // MARK: - Storage primitives
 
-    private enum Key: String, CaseIterable {
+    private enum Key: String {
         case attractorRaw, speed, zoom, hue, lineWidth, glow, integratorRaw, paramOverrides
         case viewModeRaw, sensitiveDependence, showLyapunov, completedLessons
         case didMigrateViewModeTo3D

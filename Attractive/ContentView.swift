@@ -60,7 +60,7 @@ struct ContentView: View {
                                  metadata: AttractorMetadataRegistry.metadata(for: settings.attractor),
                                  showSeparation: settings.sensitiveDependence,
                                  showLyapunov: settings.showLyapunov,
-                                 accent: Color(hue: settings.hue, saturation: 0.85, brightness: 1.0))
+                                 accent: settings.accentColor)
                         Spacer()
                     }
                     Spacer()
@@ -97,24 +97,34 @@ struct ContentView: View {
 
     // MARK: - Control bar
 
+    /// Show a sheet, first dismissing the Tune inspector so the two can't stack
+    /// on compact width (where the inspector presents as a sheet).
+    private func present(_ sheet: ActiveSheet) {
+        inspectorVisible = false
+        activeSheet = sheet
+    }
+
     private var controlBar: some View {
         HStack(spacing: 14) {
             // Identity anchor.
             controlButton(system: "circle.grid.cross", label: settings.attractor.displayName) {
-                activeSheet = .picker
+                present(.picker)
             }
 
             Divider().frame(height: 30).overlay(Color.white.opacity(0.15))
 
             // Learn cluster.
             controlButton(system: "graduationcap", label: "Learn") {
-                activeSheet = .lessons
+                present(.lessons)
             }
             controlButton(system: "slider.horizontal.3", label: "Tune") {
+                // The Tune inspector and the sheets are mutually exclusive: on
+                // compact width the inspector is itself a sheet, so never stack.
+                activeSheet = nil
                 inspectorVisible.toggle()
             }
             controlButton(system: "function", label: "Math") {
-                activeSheet = .equations
+                present(.equations)
             }
 
             Divider().frame(height: 30).overlay(Color.white.opacity(0.15))
@@ -127,7 +137,7 @@ struct ContentView: View {
                 settings.viewMode = settings.viewMode == .scene3D ? .canvas2D : .scene3D
             }
             controlButton(system: "paintbrush.pointed", label: "Style") {
-                activeSheet = .settings
+                present(.settings)
             }
         }
         .padding(.horizontal, 16)
@@ -186,7 +196,7 @@ private struct AttractorPickerSheet: View {
                             Spacer()
                             if id == settings.attractor {
                                 Image(systemName: "checkmark.circle.fill")
-                                    .foregroundStyle(Color(hue: settings.hue, saturation: 0.85, brightness: 1.0))
+                                    .foregroundStyle(settings.accentColor)
                             }
                         }
                     }
