@@ -1,1 +1,1 @@
-chaos,attractor,lorenz,strange attractor,math,physics,fractal,science,dynamics,3d,orbit
+lorenz,rossler,aizawa,fractal,physics,dynamics,nonlinear,butterfly,lyapunov,orbit,phase,3d,science

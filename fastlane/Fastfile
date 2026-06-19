@@ -20,6 +20,22 @@ platform :ios do
     end
   end
 
+  desc "Upload the iOS listing metadata (no binary, no screenshots, no submit)"
+  lane :upload_listing do
+    deliver(
+      app_identifier: "com.lukesteuber.attractive",
+      app_version: "1.0",
+      metadata_path: "./fastlane/metadata",
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      skip_app_version_update: true,
+      force: true,
+      run_precheck_before_submit: false,
+      submit_for_review: false,
+      automatic_release: false
+    )
+  end
+
   desc "Report screenshot + metadata coverage for the editable iOS version"
   lane :shots do
     app_store_connect_api_key(
