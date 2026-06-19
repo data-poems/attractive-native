@@ -108,4 +108,77 @@ platform :ios do
       UI.success("#{set.screenshot_display_type}: #{seen.size} unique")
     end
   end
+
+  desc "Set first-version app-info (subtitle + categories) directly — deliver can't on a first version"
+  lane :prepare_app_info do
+    app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY_KEY"],
+      is_key_content_base64: false
+    )
+    app = Spaceship::ConnectAPI::App.find("com.lukesteuber.attractive")
+    info = app.fetch_edit_app_info
+    UI.user_error!("no editable AppInfo found") unless info
+    UI.message("AppInfo #{info.id} state #{info.app_store_state}")
+
+    loc = info.get_app_info_localizations.find { |l| l.locale == "en-US" } || info.get_app_info_localizations.first
+    loc.update(attributes: {
+      subtitle: "Chaos & strange attractors",
+      privacyPolicyUrl: "https://dr.eamer.dev/attractive/",
+    })
+    UI.success("subtitle + privacy URL set on #{loc.locale}")
+
+    info.update_categories(category_id_map: {
+      primary_category_id: "EDUCATION",
+      secondary_category_id: "GRAPHICS_AND_DESIGN",
+    })
+    UI.success("categories set: Education / Graphics & Design")
+  end
+
+  desc "Attach the latest processed build to the editable iOS version"
+  lane :select_latest_build do
+    app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY_KEY"],
+      is_key_content_base64: false
+    )
+    app = Spaceship::ConnectAPI::App.find("com.lukesteuber.attractive")
+    v = app.get_app_store_versions(filter: { platform: "IOS" }).find { |x| x.app_store_state == "PREPARE_FOR_SUBMISSION" }
+    build = app.get_builds.max_by { |b| b.version.to_i }
+    UI.user_error!("no builds found") unless build
+    v.select_build(build_id: build.id)
+    UI.success("selected build #{build.version} for version #{v.version_string}")
+  end
+
+  desc "Pre-submission audit: report every required field's presence"
+  lane :audit do
+    app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY_KEY"],
+      is_key_content_base64: false
+    )
+    app = Spaceship::ConnectAPI::App.find("com.lukesteuber.attractive")
+    info = app.fetch_edit_app_info
+    iloc = info.get_app_info_localizations.find { |l| l.locale == "en-US" }
+    UI.message("name           : #{iloc.name}")
+    UI.message("subtitle       : #{iloc.subtitle}")
+    UI.message("privacy URL    : #{iloc.privacy_policy_url}")
+    UI.message("primary cat    : #{info.primary_category&.id}")
+    UI.message("secondary cat  : #{info.secondary_category&.id}")
+    ard = (info.fetch_age_rating_declaration rescue nil)
+    UI.message("age rating     : #{ard ? 'present' : 'MISSING'}")
+    v = app.get_app_store_versions(filter: { platform: "IOS" }).find { |x| x.app_store_state == "PREPARE_FOR_SUBMISSION" }
+    vloc = v.get_app_store_version_localizations.find { |l| l.locale == "en-US" }
+    UI.message("version        : #{v.version_string} (#{v.app_store_state})")
+    UI.message("description    : #{vloc.description.to_s.length} chars")
+    UI.message("keywords       : #{vloc.keywords.to_s.length} chars")
+    UI.message("promo text     : #{vloc.promotional_text.to_s.length} chars")
+    UI.message("support URL    : #{vloc.support_url}")
+    vloc.get_app_screenshot_sets.each { |s| UI.message("screenshots    : #{s.screenshot_display_type} = #{s.app_screenshots.count}") }
+    b = (v.build rescue nil)
+    UI.message("selected build : #{b&.version || 'none (select after processing)'}")
+  end
 end
