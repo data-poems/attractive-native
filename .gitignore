@@ -21,3 +21,5 @@ Package.resolved
 
 # Claude Code runtime artifacts
 .claude/
+fastlane/report.xml
+fastlane/README.md
