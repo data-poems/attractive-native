@@ -1,0 +1,4 @@
+app_identifier("com.lukesteuber.attractive")
+apple_id("luke@lukesteuber.com")
+team_id("596T7J7FB6")        # Apple Developer Portal team
+itc_team_id("117870543")     # App Store Connect team

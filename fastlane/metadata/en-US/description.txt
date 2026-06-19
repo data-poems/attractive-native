@@ -1,0 +1,13 @@
+Strangely Attractive turns the equations of chaos into something you can watch.
+
+Six classic strange attractors — Lorenz, Rössler, Aizawa, Thomas, Halvorsen, and Chen — each drawn live as a single glowing trajectory that never quite repeats. A handful of simple rules, tracing an endlessly intricate shape.
+
+• See it in 3D. Orbit the attractor in a real phase space, or flip to a clean 2D canvas.
+• Read the math. The exact differential equations behind each system, set beautifully on screen.
+• Learn by doing. Guided lessons walk through sensitive dependence — the butterfly effect — the Lyapunov exponent, and how Euler and RK4 integration drift apart.
+• Tune it. Adjust each system's parameters and watch the shape transform.
+• Home Screen widgets. Pin a favorite attractor where you'll see it.
+
+No account, no tracking, no network. Just the strange beauty of deterministic chaos.
+
+Made by Luke Steuber.

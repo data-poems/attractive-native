@@ -1,0 +1,44 @@
+default_platform(:ios)
+
+# Auth: deliver/spaceship auto-detect the App Store Connect API key from
+# APP_STORE_CONNECT_API_KEY_KEY_ID / _ISSUER_ID / _KEY
+# (run `source ~/.appstoreconnect/env.sh` first).
+
+platform :ios do
+  desc "Report the iOS app's versions, states, and latest TestFlight build"
+  lane :inspect do
+    app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY_KEY"],
+      is_key_content_base64: false
+    )
+    app = Spaceship::ConnectAPI::App.find("com.lukesteuber.attractive")
+    UI.success("App: #{app.name}  (#{app.bundle_id})")
+    app.get_app_store_versions(filter: { platform: "IOS" }).sort_by(&:version_string).each do |v|
+      UI.message("  version #{v.version_string} — #{v.app_store_state}")
+    end
+  end
+
+  desc "Report screenshot + metadata coverage for the editable iOS version"
+  lane :shots do
+    app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY_KEY"],
+      is_key_content_base64: false
+    )
+    app = Spaceship::ConnectAPI::App.find("com.lukesteuber.attractive")
+    v = app.get_app_store_versions(filter: { platform: "IOS" }).find { |x| x.app_store_state == "PREPARE_FOR_SUBMISSION" } ||
+        app.get_app_store_versions(filter: { platform: "IOS" }).first
+    loc = v.get_app_store_version_localizations.find { |l| l.locale == "en-US" } || v.get_app_store_version_localizations.first
+    UI.success("version #{v.version_string} (#{v.app_store_state}), locale #{loc.locale}")
+    UI.message("  description: #{loc.description.to_s.length} chars, keywords: #{loc.keywords.to_s.length} chars")
+    sets = loc.get_app_screenshot_sets
+    if sets.empty?
+      UI.important("  NO screenshots on this version")
+    else
+      sets.each { |s| UI.message("  #{s.screenshot_display_type}: #{s.app_screenshots.count} screenshots") }
+    end
+  end
+end
