@@ -191,7 +191,7 @@ public enum AttractorMetadataRegistry {
                 systemLatex: [
                     "\\dot{x} = (z - b)\\,x - d\\,y",
                     "\\dot{y} = d\\,x + (z - b)\\,y",
-                    "\\dot{z} = c + a\\,z - \\tfrac{z^3}{3} - (x^2 + y^2)(1 + e\\,z) + f\\,z\\,x^3",
+                    "\\dot{z} = c + a\\,z - \\frac{z^3}{3} - (x^2 + y^2)(1 + e\\,z) + f\\,z\\,x^3",
                 ],
                 parameters: [
                     ParameterInfo(slot: .p1, symbol: "a", name: "z feedback",
