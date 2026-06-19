@@ -28,6 +28,7 @@ targets:
     platform: iOS
     dependencies:
       - package: SwiftMath
+      - target: AttractiveWidgets
     sources:
       - path: Attractive
       - path: AttractiveCore
@@ -64,6 +65,38 @@ targets:
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
         INFOPLIST_KEY_UIRequiresFullScreen: NO
+        IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SUPPORTED_PLATFORMS: "iphoneos iphonesimulator"
+        SUPPORTS_MACCATALYST: NO
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
+
+  # Home Screen widget: a configurable strange-attractor still. Compiles the
+  # AttractiveCore sources directly (same as the app — no separate framework),
+  # so the engine's pure render path backs the widget. No SwiftMath (that's only
+  # the app's LaTeX); no App Group (the attractor is chosen in the widget editor).
+  AttractiveWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: AttractiveWidgets
+      - path: AttractiveCore
+        excludes:
+          - "Package.swift"
+          - "Tests"
+          - ".build"
+    info:
+      path: AttractiveWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: Attractive
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.lukesteuber.attractive.widgets
+        SKIP_INSTALL: YES
         IPHONEOS_DEPLOYMENT_TARGET: "17.0"
         TARGETED_DEVICE_FAMILY: "1,2"
         SUPPORTED_PLATFORMS: "iphoneos iphonesimulator"
