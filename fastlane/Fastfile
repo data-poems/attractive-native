@@ -57,4 +57,55 @@ platform :ios do
       sets.each { |s| UI.message("  #{s.screenshot_display_type}: #{s.app_screenshots.count} screenshots") }
     end
   end
+
+  desc "Upload App Store screenshots (the macOS-rendered attractor cards)"
+  lane :upload_screenshots do
+    staged = File.expand_path("../build/screenshots/en-US", __dir__)
+    FileUtils.rm_rf(staged)
+    FileUtils.mkdir_p(staged)
+    { "iphone-6.9" => "iphone69", "ipad-13" => "ipad13" }.each do |src, prefix|
+      Dir[File.expand_path("../screenshots-appstore/#{src}/0[1-9]-*.png", __dir__)].sort.each do |f|
+        FileUtils.cp(f, File.join(staged, "#{prefix}-#{File.basename(f)}"))
+      end
+    end
+    deliver(
+      app_identifier: "com.lukesteuber.attractive",
+      app_version: "1.0",
+      screenshots_path: File.expand_path("../build/screenshots", __dir__),
+      overwrite_screenshots: true,
+      skip_binary_upload: true,
+      skip_metadata: true,
+      skip_app_version_update: true,
+      force: true,
+      run_precheck_before_submit: false,
+      submit_for_review: false,
+      automatic_release: false
+    )
+  end
+
+  desc "Verify + dedup screenshots (deliver's read-back race can duplicate them)"
+  lane :dedup_shots do
+    app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY_KEY"],
+      is_key_content_base64: false
+    )
+    app = Spaceship::ConnectAPI::App.find("com.lukesteuber.attractive")
+    v = app.get_app_store_versions(filter: { platform: "IOS" }).find { |x| x.app_store_state == "PREPARE_FOR_SUBMISSION" } ||
+        app.get_app_store_versions(filter: { platform: "IOS" }).first
+    loc = v.get_app_store_version_localizations.find { |l| l.locale == "en-US" } || v.get_app_store_version_localizations.first
+    loc.get_app_screenshot_sets.each do |set|
+      seen = {}
+      set.app_screenshots.each do |sh|
+        if seen[sh.file_name]
+          UI.message("  dupe → delete #{set.screenshot_display_type} #{sh.file_name}")
+          sh.delete!
+        else
+          seen[sh.file_name] = true
+        end
+      end
+      UI.success("#{set.screenshot_display_type}: #{seen.size} unique")
+    end
+  end
 end
