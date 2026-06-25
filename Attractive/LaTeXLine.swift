@@ -63,7 +63,6 @@ struct LaTeXLine: UIViewRepresentable {
         return s.trimmingCharacters(in: .whitespaces)
     }
 
-    @available(iOS 16.0, *)
     func sizeThatFits(_ proposal: ProposedViewSize, uiView: MTMathUILabel, context: Context) -> CGSize? {
         let fitting = uiView.sizeThatFits(CGSize(width: proposal.width ?? .greatestFiniteMagnitude,
                                                  height: .greatestFiniteMagnitude))

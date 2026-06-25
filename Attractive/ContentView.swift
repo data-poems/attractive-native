@@ -111,7 +111,7 @@ struct ContentView: View {
                 present(.picker)
             }
 
-            Divider().frame(height: 30).overlay(Color.white.opacity(0.15))
+            Rectangle().fill(Color.white.opacity(0.15)).frame(width: 1, height: 30)
 
             // Learn cluster.
             controlButton(system: "graduationcap", label: "Learn") {
@@ -127,7 +127,7 @@ struct ContentView: View {
                 present(.equations)
             }
 
-            Divider().frame(height: 30).overlay(Color.white.opacity(0.15))
+            Rectangle().fill(Color.white.opacity(0.15)).frame(width: 1, height: 30)
 
             // Look cluster.
             controlButton(system: settings.viewMode == .scene3D ? "cube" : "square.on.square",

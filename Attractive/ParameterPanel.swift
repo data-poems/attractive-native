@@ -95,7 +95,6 @@ private struct ParameterSliderRow: View {
                     BifurcationTrack(info: info,
                                      accent: accent,
                                      onTap: jump(to:))
-                        .allowsHitTesting(true)
                 }
             }
 

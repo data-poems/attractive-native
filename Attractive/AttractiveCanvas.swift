@@ -21,7 +21,7 @@ struct AttractiveCanvas: View {
     @Environment(\.isLuminanceReduced) private var luminanceReduced
 
     var body: some View {
-        TimelineView(.animation(paused: luminanceReduced)) { timeline in
+        TimelineView(.animation(paused: luminanceReduced || reduceMotion)) { timeline in
             let elapsedMs = msSince(start: firstTimestamp, now: timeline.date)
             Canvas(opaque: true,
                    colorMode: .extendedLinear,
