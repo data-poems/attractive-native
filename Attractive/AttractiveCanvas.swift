@@ -52,6 +52,17 @@ struct AttractiveCanvas: View {
         built = size.width > 1 && size.height > 1
         firstTimestamp = nil
         lastAdvanceTimestamp = nil
+
+        // Refine bounds precisely in the background; the rough estimate from
+        // regenerate frames the view immediately, this corrects it before the
+        // first frame in the common case (< 1 ms background vs ~16 ms display link).
+        let cfg = config, integ = integrator
+        Task {
+            let bounds = await Task.detached(priority: .userInitiated) {
+                AttractiveEngine.estimateBounds(config: cfg, integrator: integ)
+            }.value
+            engine.applyBounds(bounds)
+        }
     }
 
     private func advance(now: Date) {

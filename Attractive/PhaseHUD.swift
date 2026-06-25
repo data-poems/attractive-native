@@ -10,23 +10,16 @@ final class PhaseHUDModel {
     /// Separation between the reference and companion trajectories (model space).
     var separation: Double?
     /// Rolling log10 separation samples for the sparkline (oldest→newest).
-    var separationLog: [Double] = []
+    var separationLog = RingBuffer<Double>(capacity: 120)
     /// Live largest-Lyapunov estimate and whether it has converged enough to trust.
     var lyapunov: Double?
     var lyapunovWarm: Bool = false
     /// A point the user tapped to inspect (Phase 8).
     var inspected: SIMD3<Double>?
 
-    private let maxSamples = 120
-
     func pushSeparation(_ d: Double) {
         separation = d
-        if d > 0 {
-            separationLog.append(log10(d))
-            if separationLog.count > maxSamples {
-                separationLog.removeFirst(separationLog.count - maxSamples)
-            }
-        }
+        if d > 0 { separationLog.append(log10(d)) }
     }
 
     func reset() {
@@ -74,7 +67,7 @@ struct PhaseHUD: View {
             Text(scientific(d))
                 .font(.title3.monospacedDigit().weight(.semibold))
                 .foregroundStyle(.white)
-            Sparkline(values: model.separationLog, color: accent)
+            Sparkline(values: model.separationLog.ordered(), color: accent)
                 .frame(height: 34)
             Text("two trajectories, started 10⁻⁵ apart")
                 .font(.caption2)

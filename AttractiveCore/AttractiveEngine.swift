@@ -80,6 +80,11 @@ public final class AttractiveEngine {
     /// transients.
     public private(set) var modelBounds = ModelBounds(min: .zero, max: .zero)
 
+    /// Replace the bounding box after an async `estimateBounds` refinement. Both
+    /// renderers pick up the updated value on the next frame: the 2D canvas via
+    /// `appendProjected`, the 3D coordinator via its camera-framing logic.
+    public func applyBounds(_ bounds: ModelBounds) { modelBounds = bounds }
+
     // MARK: Companion trajectory (sensitive dependence)
 
     /// When true, a second trajectory starting `epsilon` away is integrated in
@@ -120,7 +125,10 @@ public final class AttractiveEngine {
         self.width = width
         self.height = height
         if let config { self.config = config }
-        modelBounds = Self.estimateBounds(config: self.config, integrator: integrator)
+        // Quick rough estimate for immediate framing; callers should schedule a
+        // full estimateBounds async and call applyBounds when done.
+        modelBounds = Self.estimateBounds(config: self.config, integrator: integrator,
+                                          warmupSteps: 100, sampleSteps: 500)
 
         let p = self.config.initPos
         x = p.count > 0 ? p[0] : 0.1

@@ -151,6 +151,30 @@ final class PhaseSpaceCoordinator: NSObject, SCNSceneRendererDelegate, UIGesture
 
         if result.mustRegenerate {
             Task { @MainActor [weak self] in self?.hud?.reset() }
+
+            // Refine bounds precisely in the background and reanimate the camera
+            // to the correct framing. The rough estimate from regenerate provides
+            // immediate placement; this glide corrects it within one display cycle.
+            let capturedConfig = config
+            let capturedIntegrator = integrator
+            let capturedZoom = zoom
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                let bounds = await Task.detached(priority: .userInitiated) {
+                    AttractiveEngine.estimateBounds(config: capturedConfig, integrator: capturedIntegrator)
+                }.value
+                self.locked { self.engine.applyBounds(bounds) }
+                let c = bounds.center
+                let extent = bounds.extent
+                guard extent.isFinite, extent > 0 else { return }
+                SCNTransaction.begin()
+                SCNTransaction.animationDuration = 0.25
+                self.baseRadius = CGFloat(max(extent, 1)) * 1.2
+                self.orbitRadius = self.baseRadius / max(0.2, CGFloat(capturedZoom))
+                self.cameraOrbit.position = SCNVector3(Float(c.x), Float(c.y), Float(c.z))
+                self.cameraNode.position = SCNVector3(0, 0, self.orbitRadius)
+                SCNTransaction.commit()
+            }
         }
     }
 
