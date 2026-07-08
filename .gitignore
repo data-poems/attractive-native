@@ -21,5 +21,10 @@ Package.resolved
 
 # Claude Code runtime artifacts
 .claude/
+.playwright-mcp/
 fastlane/report.xml
 fastlane/README.md
+
+# Sidecar/local capture artifacts
+attractive-web/
+attractive-web-*.png
