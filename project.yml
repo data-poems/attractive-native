@@ -16,9 +16,11 @@ settings:
     CODE_SIGN_STYLE: Automatic
     ENABLE_USER_SCRIPT_SANDBOXING: YES
     # Single source of truth for version + build across the app and its widget
-    # (Apple requires the embedded extension's build to match the app). ASC
-    # already has 1.0 builds up to 9, so the next upload is build 10.
-    MARKETING_VERSION: "1.0"
+    # (Apple requires the embedded extension's marketing version and build to
+    # match the app). Always bump here and run `xcodegen generate` — editing
+    # the target version in Xcode directly desyncs the widget and breaks
+    # ValidateEmbeddedBinary.
+    MARKETING_VERSION: "1.0.1"
     CURRENT_PROJECT_VERSION: "11"
 
 packages:
