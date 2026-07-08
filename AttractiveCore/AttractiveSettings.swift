@@ -44,6 +44,9 @@ public final class AttractiveSettings {
     /// first to reveal sensitive dependence (the butterfly effect). 3D only.
     public var sensitiveDependence: Bool { didSet { write(sensitiveDependence, .sensitiveDependence) } }
 
+    /// Flipped once the user completes the first-launch intro tour.
+    public var hasSeenIntro: Bool { didSet { write(hasSeenIntro, .hasSeenIntro) } }
+
     /// When on, the largest Lyapunov exponent is estimated live and shown on the HUD.
     public var showLyapunov: Bool { didSet { write(showLyapunov, .showLyapunov) } }
 
@@ -80,6 +83,7 @@ public final class AttractiveSettings {
         self.viewModeRaw = suite.string(forKey: Key.viewModeRaw.rawValue) ?? ViewMode.scene3D.rawValue
         self.sensitiveDependence = Self.readBool(suite, .sensitiveDependence, default: false)
         self.showLyapunov = Self.readBool(suite, .showLyapunov, default: false)
+        self.hasSeenIntro = Self.readBool(suite, .hasSeenIntro, default: false)
         if let data = suite.data(forKey: Key.paramOverrides.rawValue),
            let decoded = try? JSONDecoder().decode([String: [Double]].self, from: data) {
             self.paramOverrides = decoded
@@ -206,7 +210,7 @@ public final class AttractiveSettings {
     private enum Key: String {
         case attractorRaw, speed, zoom, hue, lineWidth, glow, integratorRaw, paramOverrides
         case viewModeRaw, sensitiveDependence, showLyapunov, completedLessons
-        case didMigrateViewModeTo3D
+        case didMigrateViewModeTo3D, hasSeenIntro
     }
 
     private func writeParamOverrides() {

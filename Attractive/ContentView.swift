@@ -75,7 +75,15 @@ struct ContentView: View {
                 Spacer()
                 controlBar
             }
+
+            // Layer 4 — first-launch intro tour (covers everything so the user
+            // focuses on the overlay; the attractor stays live behind it).
+            if !settings.hasSeenIntro {
+                IntroTour(settings: settings)
+                    .transition(.opacity)
+            }
         }
+        .animation(.easeOut(duration: 0.35), value: settings.hasSeenIntro)
         // Parameter panel: a docked inspector on iPad (regular width), an
         // automatic sheet on iPhone (compact width) — SwiftUI adapts it for us.
         .inspector(isPresented: $inspectorVisible) {
