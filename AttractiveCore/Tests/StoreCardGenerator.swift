@@ -49,6 +49,119 @@ final class StoreCardGenerator: XCTestCase {
                 try Self.writePNG(cg, to: url)
                 print("WROTE \(url.path)  \(cg.width)x\(cg.height)")
             }
+
+            // 6th shot: the widget showcase. The app ships a Home-Screen widget
+            // (systemSmall/Medium/Large) that had no App Store media; this renders
+            // the same attractor tiles on a Home-Screen mockup so the listing
+            // shows the widget in context.
+            let widgetRenderer = ImageRenderer(content: WidgetShowcaseCard(size: size))
+            widgetRenderer.scale = 1
+            if let cg = widgetRenderer.cgImage {
+                let url = dir.appendingPathComponent("06-widgets.png")
+                try Self.writePNG(cg, to: url)
+                print("WROTE \(url.path)  \(cg.width)x\(cg.height)")
+            } else {
+                XCTFail("ImageRenderer returned nil for widget showcase \(label)")
+            }
+        }
+    }
+
+    /// Per-attractor hue, mirroring `AttractorPalette` in the widget target (kept
+    /// in sync by hand — the widget target isn't importable from these tests).
+    private static func hue(for id: AttractorID) -> Double {
+        switch id {
+        case .lorenz:    return 0.55
+        case .rossler:   return 0.78
+        case .aizawa:    return 0.42
+        case .thomas:    return 0.12
+        case .halvorsen: return 0.92
+        case .chen:      return 0.62
+        }
+    }
+
+    /// Draws one attractor trail (dim full trail + bright leading head) into a
+    /// GraphicsContext, matching `AttractorWidgetView.draw`. Shared by the widget
+    /// tiles so the shot reads exactly like the shipping widget.
+    fileprivate static func drawAttractor(_ id: AttractorID, hue: Double, in ctx: inout GraphicsContext, size: CGSize) {
+        ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .color(.black))
+        guard size.width > 1, size.height > 1 else { return }
+        let engine = AttractiveEngine(config: AttractorRegistry.defaultConfig(for: id))
+        engine.integrator = .rk4
+        engine.maxPoints = 7000
+        engine.regenerate(width: Double(size.width), height: Double(size.height))
+        let target = min(engine.maxPoints - 200, 6000)
+        var t = 0.0
+        while engine.points.count < target {
+            t += 16.0
+            engine.advance(timeMs: t)
+            if t > 120_000 { break }
+        }
+        guard engine.points.count > 2 else { return }
+        let base = Color(hue: hue, saturation: 0.85, brightness: 1.0)
+        let lw = max(1.0, size.width * 0.012)
+        var trail = ctx
+        trail.addFilter(.shadow(color: base.opacity(0.7), radius: size.width * 0.04))
+        trail.stroke(Path(engine.trailPath()),
+                     with: .color(base.opacity(0.6)),
+                     style: StrokeStyle(lineWidth: lw, lineCap: .round, lineJoin: .round))
+        let headCount = min(engine.points.count, 600)
+        if headCount > 1 {
+            let pts = engine.points.suffix(headCount)
+            var head = Path()
+            head.move(to: pts.first!)
+            for p in pts.dropFirst() { head.addLine(to: p) }
+            var hl = ctx
+            hl.addFilter(.shadow(color: base.opacity(0.9), radius: size.width * 0.05))
+            hl.stroke(head, with: .color(.white.opacity(0.95)),
+                      style: StrokeStyle(lineWidth: lw * 1.2, lineCap: .round, lineJoin: .round))
+        }
+    }
+
+    /// One widget tile: a rounded attractor render on black, matching how
+    /// WidgetKit frames `AttractorWidgetView`.
+    private struct WidgetTile: View {
+        let id: AttractorID
+        let side: CGSize
+        var body: some View {
+            Canvas(opaque: true, colorMode: .extendedLinear) { ctx, sz in
+                StoreCardGenerator.drawAttractor(id, hue: StoreCardGenerator.hue(for: id), in: &ctx, size: sz)
+            }
+            .frame(width: side.width, height: side.height)
+            .clipShape(RoundedRectangle(cornerRadius: side.height * 0.22, style: .continuous))
+        }
+    }
+
+    /// A Home-Screen mockup: soft wallpaper, a medium widget over two small
+    /// widgets (three distinct attractors), and a headline. Reads as "the widget,
+    /// on your Home Screen."
+    private struct WidgetShowcaseCard: View {
+        let size: CGSize
+        var body: some View {
+            let unit = size.width * 0.40          // a systemSmall tile edge
+            let gap = size.width * 0.06
+            ZStack(alignment: .top) {
+                LinearGradient(colors: [Color(hue: 0.62, saturation: 0.55, brightness: 0.22),
+                                        Color(hue: 0.80, saturation: 0.6, brightness: 0.10),
+                                        .black],
+                               startPoint: .topLeading, endPoint: .bottomTrailing)
+                VStack(spacing: gap) {
+                    Spacer(minLength: size.height * 0.14)
+                    Text("Live attractors on your Home Screen")
+                        .font(.system(size: size.width * 0.048, weight: .bold, design: .monospaced))
+                        .foregroundStyle(.white)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .padding(.horizontal, size.width * 0.08)
+                    // Medium widget (2 wide) over two small widgets.
+                    WidgetTile(id: .lorenz, side: CGSize(width: unit * 2 + gap, height: unit))
+                    HStack(spacing: gap) {
+                        WidgetTile(id: .aizawa, side: CGSize(width: unit, height: unit))
+                        WidgetTile(id: .thomas, side: CGSize(width: unit, height: unit))
+                    }
+                    Spacer()
+                }
+            }
+            .frame(width: size.width, height: size.height)
         }
     }
 
