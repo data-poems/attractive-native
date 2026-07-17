@@ -1,0 +1,9 @@
+<!--
+  File Purpose: Defines stable shell and launcher colors used before the web app paints.
+  Primary Components: Dark background and cyan attractor accent for the adaptive icon.
+  Inputs/Outputs: Compiled into theme and adaptive-icon color resources.
+-->
+<resources>
+    <color name="attractive_background">#0A0A0A</color>
+    <color name="attractive_icon_background">#0A0A0A</color>
+</resources>

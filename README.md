@@ -34,3 +34,39 @@ xcodebuild -project Attractive.xcodeproj -scheme Attractive \
 # Validate the package alone:
 cd AttractiveCore && swift build
 ```
+
+## Android
+
+Offline WebView shell (same pattern as Cube / Jankify, not Capacitor). The
+shell loads a prepared copy of `attractive-web` with vendored three.js,
+Rough.js, and KaTeX; network loads are blocked.
+
+```bash
+# Requires attractive-web/ (local sidecar) with vendor/ libs present.
+export JAVA_HOME="$(/usr/libexec/java_home -v 21)"
+cd android
+./gradlew test assembleDebug
+# Stage APK/AAB + checksums (release/android and dist/platforms/android):
+./scripts/stage-release.sh
+```
+
+Optional release signing env: `ATTRACTIVE_STORE_FILE`, `ATTRACTIVE_STORE_PASSWORD`,
+`ATTRACTIVE_KEY_ALIAS`, `ATTRACTIVE_KEY_PASSWORD`. Without them, staging still
+produces unsigned release artifacts plus a debug-keystore **testing** APK.
+
+See [android/README.md](android/README.md).
+
+### Platforms suite
+
+Root [`platforms.yml`](platforms.yml) lists the Android track for the
+[`platforms`](https://github.com/actually-useful-ai/platforms) CLI (detect /
+doctor / plan). Ambient Time multi-platform ports are out of scope here.
+
+```bash
+# from the platforms repo
+PYTHONPATH=src:tools:. python3 -m platforms detect --project /path/to/attractive-ios --json
+PYTHONPATH=src:tools:. python3 -m platforms doctor --project /path/to/attractive-ios --platform android --json
+PYTHONPATH=src:tools:. python3 -m platforms plan --project /path/to/attractive-ios --platform android --json
+```
+
+Staged Android evidence: `dist/platforms/android/<version>+<code>/`.

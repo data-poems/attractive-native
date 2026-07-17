@@ -1,0 +1,61 @@
+# Attractive Android
+
+Offline WebView shell for **Strangely Attractive**. The UI is the static
+`attractive-web` app, prepared into `android/web` and loaded from
+`file:///android_asset/` with network loads blocked.
+
+This is the same pattern as Cube / Jankify — not Capacitor.
+
+## Requirements
+
+- JDK 21
+- Android SDK Platform 36 + Build-Tools 36
+- Local `../attractive-web` tree (sidecar; may be gitignored) with vendored libs under `attractive-web/vendor/`
+
+## Prepare offline web assets
+
+```bash
+# Once: vendor three / rough / katex into attractive-web/vendor/ (already done on this machine)
+# Each build: rewrite CDN tags into android/web
+../scripts/prepare-android-web.sh
+```
+
+`preBuild` runs the prepare script automatically.
+
+## Build
+
+```bash
+export JAVA_HOME="$(/usr/libexec/java_home -v 21)"
+./gradlew test assembleDebug
+# APK: app/build/outputs/apk/debug/app-debug.apk
+```
+
+## Signed release staging
+
+Optional environment variables (never commit these):
+
+- `ATTRACTIVE_STORE_FILE`
+- `ATTRACTIVE_STORE_PASSWORD`
+- `ATTRACTIVE_KEY_ALIAS`
+- `ATTRACTIVE_KEY_PASSWORD`
+
+```bash
+export JAVA_HOME="$(/usr/libexec/java_home -v 21)"
+./scripts/stage-release.sh
+```
+
+Writes the same bundle to both:
+
+- `../release/android/<version>+<code>/` (local convenience)
+- `../dist/platforms/android/<version>+<code>/` (**platforms** suite convention)
+
+Each stage dir includes APK, AAB, `SHA256SUMS`, `PROVENANCE.md`, and
+`UPLOAD_CHECKLIST.md`. Without release signing env vars you get **unsigned**
+release artifacts plus a debug-keystore **testing** APK for sideload.
+
+## Security posture
+
+- No Android permissions
+- `blockNetworkLoads = true`
+- External http(s) links open in the system browser only on user gesture
+- No cleartext traffic; no backup of private files

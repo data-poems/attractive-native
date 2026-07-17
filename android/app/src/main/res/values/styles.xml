@@ -1,0 +1,17 @@
+<!--
+  File Purpose: Provides a fullscreen, edge-to-edge theme for the Attractive WebView shell.
+  Primary Components: No-action-bar window, dark launch color, and transparent system bars.
+  Inputs/Outputs: Applied by AndroidManifest.xml to MainActivity.
+-->
+<resources>
+    <style name="Theme.Attractive" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowBackground">@color/attractive_background</item>
+        <item name="android:colorAccent">#00FFFF</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+</resources>

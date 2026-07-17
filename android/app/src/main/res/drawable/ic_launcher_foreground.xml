@@ -1,0 +1,27 @@
+<!--
+  File Purpose: Draws a high-contrast attractor-inspired launcher foreground.
+  Primary Components: Nested orbit ellipses on a dark field.
+  Inputs/Outputs: Rendered by the adaptive launcher icon resource.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#0A0A0A"
+        android:pathData="M20,20h68v68h-68z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#00FFFF"
+        android:strokeWidth="3"
+        android:pathData="M54,30c14,0 24,10 24,24s-10,24 -24,24 -24,-10 -24,-24 10,-24 24,-24z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FF00AA"
+        android:strokeWidth="2.5"
+        android:pathData="M54,38c9,0 16,7 16,16s-7,16 -16,16 -16,-7 -16,-16 7,-16 16,-16z" />
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M54,52m-4,0a4,4 0 1,1 8,0a4,4 0 1,1 -8,0" />
+</vector>

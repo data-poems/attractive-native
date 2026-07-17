@@ -1,0 +1,12 @@
+# Attractive — platform adapter targets for the platforms suite CLI.
+# Additive metadata only; does not change Gradle or Xcode defaults.
+project: strangely-attractive
+version: "1.0.0"
+android_module: android
+www: attractive-web
+platforms: [android]
+notes: |
+  iOS is native SwiftUI (Attractive / AttractiveCore); not a WebView wrapper.
+  Android is an offline WebView shell over attractive-web (Cube/Jankify pattern).
+  Web host remains https://dr.eamer.dev/datavis/attractive/ (not a platforms web-kiosk track).
+  Ambient Time multi-platform ports are out of scope for this repo.

@@ -28,3 +28,14 @@ fastlane/README.md
 # Sidecar/local capture artifacts
 attractive-web/
 attractive-web-*.png
+
+# Android
+android/.gradle/
+android/local.properties
+android/**/build/
+android/web/
+release/android/
+dist/platforms/
+*.apk
+*.aab
+*.idsig
