@@ -9,6 +9,11 @@
 
 set -eu
 
+export PATH="/usr/local/bin:/opt/homebrew/bin:$PATH"
+export HOMEBREW_NO_AUTO_UPDATE=1
+export HOMEBREW_NO_ENV_HINTS=1
+export HOMEBREW_NO_INSTALL_CLEANUP=1
+
 echo "==> ci_post_clone: branch=${CI_BRANCH:-?} commit=${CI_COMMIT:-?} build=${CI_BUILD_NUMBER:-?}"
 
 ROOT_DIR="$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)"
