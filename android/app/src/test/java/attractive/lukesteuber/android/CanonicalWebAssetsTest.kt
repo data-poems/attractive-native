@@ -4,7 +4,7 @@
  * Inputs/Outputs: Reads ../web through a Gradle-injected path and reports contract failures.
  */
 
-package com.lukesteuber.attractive
+package attractive.lukesteuber.android
 
 import java.io.File
 import org.junit.Assert.assertFalse

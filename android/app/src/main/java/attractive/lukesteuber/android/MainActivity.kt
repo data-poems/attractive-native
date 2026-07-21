@@ -6,7 +6,7 @@
 
 @file:Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
 
-package com.lukesteuber.attractive
+package attractive.lukesteuber.android
 
 import android.annotation.SuppressLint
 import android.app.Activity

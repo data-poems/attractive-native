@@ -4,7 +4,7 @@
  * Inputs/Outputs: Accepts a URL string and returns allow-local, open-external, or block.
  */
 
-package com.lukesteuber.attractive
+package attractive.lukesteuber.android
 
 import java.net.URI
 

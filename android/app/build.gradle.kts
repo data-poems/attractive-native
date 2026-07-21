@@ -39,11 +39,11 @@ val attractiveVersionName = requireNotNull(versionProperties.getProperty("VERSIO
 val attractiveVersionCode = requireNotNull(versionProperties.getProperty("VERSION_CODE")).toInt()
 
 android {
-    namespace = "com.lukesteuber.attractive"
+    namespace = "attractive.lukesteuber.android"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.lukesteuber.attractive"
+        applicationId = "attractive.lukesteuber.android"
         minSdk = 26
         targetSdk = 36
         versionCode = attractiveVersionCode

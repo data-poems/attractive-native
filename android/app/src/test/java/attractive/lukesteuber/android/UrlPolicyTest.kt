@@ -4,7 +4,7 @@
  * Inputs/Outputs: Supplies representative URLs and asserts deterministic UrlDecision values.
  */
 
-package com.lukesteuber.attractive
+package attractive.lukesteuber.android
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
