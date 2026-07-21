@@ -1,0 +1,1 @@
+Initial Google Play closed test. Explore 25 strange attractors, tune their parameters and visual style, switch between 2D and 3D, read the equations, and work through guided lessons. Everything renders offline on your device.
