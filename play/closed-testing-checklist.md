@@ -17,7 +17,7 @@
 - [x] Phone screenshots and alt text complete.
 - [x] 7-inch tablet screenshots and alt text complete.
 - [x] Phone and tablet screenshots visually reviewed for authenticity and sensitive content.
-- [ ] Deploy the platform-neutral privacy policy at `https://dr.eamer.dev/attractive/`.
+- [x] Deploy the dual-platform privacy policy at `https://dr.eamer.dev/attractive/privacy.html` (web app stays at `/attractive/`).
 
 ## App content
 
@@ -35,4 +35,4 @@
 - [ ] Paste `what-to-test.md` into the tester instructions.
 - [ ] Paste the release notes from `release-notes/en-US.txt`.
 - [ ] Review Play's automated device and policy checks.
-- [ ] Start the closed test only after the privacy URL and tablet screenshots are ready.
+- [ ] Start the closed test (privacy URL and tablet screenshots are ready).

@@ -46,6 +46,6 @@ Result: Gradle build successful, including unit tests and release lint.
 
 The Android manifest requests no permissions. The activity blocks WebView network loads and serves bundled content, so the release needs no account, network access, analytics, advertising, or tracking declarations.
 
-## Remaining external check
+## Privacy URL
 
-Deploy `policy/privacy-policy.html` at `https://dr.eamer.dev/attractive/` before submitting Data safety. The live policy currently describes Apple system storage and does not accurately cover Android.
+`https://dr.eamer.dev/attractive/privacy.html` serves the dual-platform policy from `policy/privacy-policy.html` (effective July 21, 2026). The web app remains at `/attractive/`. Safe to submit Data safety against the privacy URL.

@@ -8,30 +8,50 @@
   <style>
     :root { color-scheme: dark; --bg: #090b12; --text: #e9ecf4; --soft: #bbc2d0; --cyan: #72e6ee; --magenta: #f44ed9; --line: #272b38; }
     * { box-sizing: border-box; }
-    body { margin: 0; background: radial-gradient(circle at 85% 10%, #24133a, var(--bg) 46%); color: var(--text); font: 16px/1.65 system-ui, sans-serif; }
+    body { margin: 0; background: radial-gradient(circle at 85% 10%, #24133a, var(--bg) 46%); color: var(--text); font: 16px/1.65 system-ui, -apple-system, sans-serif; }
     main { max-width: 760px; margin: auto; padding: 48px 22px 80px; }
     article { background: rgba(12, 14, 23, .92); border: 1px solid var(--line); border-radius: 18px; padding: clamp(24px, 5vw, 46px); }
     h1 { font-size: clamp(2rem, 7vw, 3.2rem); line-height: 1.05; margin: 0 0 .5rem; }
     h2 { color: var(--cyan); font-size: 1.15rem; margin-top: 2rem; }
+    h3 { color: var(--text); font-size: 1rem; margin: 1.25rem 0 .4rem; }
     p, li { color: var(--soft); }
     a { color: var(--magenta); }
+    ul { padding-left: 1.2rem; }
   </style>
 </head>
 <body><main><article>
   <h1>Strangely Attractive Privacy Policy</h1>
-  <p>Effective July 20, 2026</p>
-  <p>Strangely Attractive is a mathematical visualization app by Luke Steuber.</p>
+  <p>Effective July 21, 2026</p>
+  <p>Strangely Attractive (also titled Attractive) is a strange-attractor visualization app by Luke Steuber. This policy covers the iPhone and iPad app, its Home Screen widgets, and the Android app.</p>
+
+  <h2>Short version</h2>
+  <p>The apps need no account. They collect no personal information. They contain no advertising, analytics, crash-reporting, or tracking SDKs. Visualization stays on your device. The developer does not receive your settings or activity.</p>
+
   <h2>Data collection</h2>
-  <p>Strangely Attractive requires no account and collects no personal information. It contains no advertising, analytics, crash-reporting, or tracking SDKs. The developer does not receive your activity, settings, or device information.</p>
+  <p>Strangely Attractive does not collect, sell, or share personal information. There is no account system and no developer-operated backend for the apps.</p>
+
   <h2>On-device data</h2>
-  <p>The app stores visualization preferences, onboarding state, and lesson progress on your device. Remove this local data through the operating system's app-storage controls or by deleting the app.</p>
+  <h3>iPhone and iPad</h3>
+  <p>The native app and its widgets store visualization preferences and related local state with Apple system storage on your device. Attractors render on device. Deleting the app removes that local data.</p>
+  <h3>Android</h3>
+  <p>The Android app packages its interface, lessons, equations, fonts, and rendering libraries inside the installation. It requests no Android permissions and blocks network loads from its WebView. Visualization preferences, onboarding state, and lesson progress stay in local WebView storage on your device. You can clear that data through the system app-storage controls or by deleting the app.</p>
+
   <h2>Network access</h2>
-  <p>The Android app packages its interface, lessons, equations, fonts, and rendering libraries inside the installation. It requests no Android permissions and blocks network loads from its WebView.</p>
+  <p>Neither app sends your settings or activity to a developer-operated server.</p>
+  <ul>
+    <li>On Android, the WebView is configured to block network loads, so the packaged experience runs offline.</li>
+    <li>On iPhone and iPad, attractor rendering and widgets run on device.</li>
+    <li>If you tap an optional link (for example a website or support address), your device may open that destination in a browser or mail client. That happens only after you choose the link.</li>
+  </ul>
+  <p>Bundled example datasets shown in the interface (climate, finance, and similar labels) ship with the app. They are not live sensor feeds and do not fetch records from the network in these builds.</p>
+
   <h2>Children</h2>
   <p>Strangely Attractive collects no personal information from children or adults. The app is not specifically directed to children under 13.</p>
+
   <h2>Changes</h2>
-  <p>Luke Steuber will post policy updates here with a revised effective date.</p>
+  <p>Policy updates will be posted at this URL with a revised effective date.</p>
+
   <h2>Contact</h2>
-  <p>Luke Steuber<br><a href="mailto:luke@lukesteuber.com">luke@lukesteuber.com</a></p>
+  <p>Luke Steuber<br><a href="mailto:luke@lukesteuber.com">luke@lukesteuber.com</a><br><a href="https://dr.eamer.dev/attractive/">Web app</a> · <a href="https://dr.eamer.dev/attractive/privacy.html">Privacy policy</a></p>
 </article></main></body>
 </html>
