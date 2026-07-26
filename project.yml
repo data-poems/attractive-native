@@ -20,8 +20,8 @@ settings:
     # match the app). Always bump here and run `xcodegen generate` — editing
     # the target version in Xcode directly desyncs the widget and breaks
     # ValidateEmbeddedBinary.
-    MARKETING_VERSION: "1.0.1"
-    CURRENT_PROJECT_VERSION: "11"
+    MARKETING_VERSION: "1.0.2"
+    CURRENT_PROJECT_VERSION: "15"
 
 packages:
   SwiftMath:
@@ -109,3 +109,13 @@ targets:
         SUPPORTED_PLATFORMS: "iphoneos iphonesimulator"
         SUPPORTS_MACCATALYST: NO
         SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
+
+schemes:
+  Attractive:
+    build:
+      targets:
+        Attractive: all
+    run:
+      config: Debug
+    archive:
+      config: Release

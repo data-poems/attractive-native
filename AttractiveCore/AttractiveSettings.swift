@@ -67,10 +67,14 @@ public final class AttractiveSettings {
     private var completedLessons: Set<String> { didSet { writeCompletedLessons() } }
     public private(set) var lessonRevision: Int
 
+    /// Persisted usage history for the review-request policy.
+    @ObservationIgnored
+    private var reviewPromptHistory: ReviewPromptHistory { didSet { writeReviewPromptHistory() } }
+    public private(set) var reviewPromptRevision: Int
+
     // MARK: - Init
 
-    private init() {
-        let suite = UserDefaults.standard
+    init(defaults suite: UserDefaults = .standard, now: Date = Date()) {
         self.defaults = suite
 
         self.attractorRaw = suite.string(forKey: Key.attractorRaw.rawValue) ?? AttractorID.lorenz.rawValue
@@ -98,6 +102,17 @@ public final class AttractiveSettings {
             self.completedLessons = []
         }
         self.lessonRevision = 0
+        if let data = suite.data(forKey: Key.reviewPromptHistory.rawValue),
+           let decoded = try? JSONDecoder().decode(ReviewPromptHistory.self, from: data) {
+            self.reviewPromptHistory = decoded
+        } else {
+            let history = ReviewPromptHistory(firstUseDate: now)
+            self.reviewPromptHistory = history
+            if let data = try? JSONEncoder().encode(history) {
+                suite.set(data, forKey: Key.reviewPromptHistory.rawValue)
+            }
+        }
+        self.reviewPromptRevision = 0
 
         // One-time migration: 3D is now the default view. Installs that saved a
         // 2D preference before this change are flipped to 3D exactly once so
@@ -205,12 +220,57 @@ public final class AttractiveSettings {
         lessonRevision &+= 1
     }
 
+    public var completedLessonCount: Int {
+        _ = lessonRevision
+        return completedLessons.count
+    }
+
+    // MARK: - Review requests
+
+    /// Record foreground use. Activations within 30 minutes stay part of the
+    /// same session, so notification interruptions do not game eligibility.
+    public func recordActiveSession(at date: Date = Date()) {
+        guard reviewPromptHistory.recordActiveSession(at: date) else { return }
+        reviewPromptRevision &+= 1
+    }
+
+    public func shouldRequestReview(currentVersion: String,
+                                    now: Date = Date(),
+                                    forceEligible: Bool? = nil) -> Bool {
+        _ = reviewPromptRevision
+        return ReviewPromptPolicy().isEligible(
+            completedLessonIDs: completedLessons,
+            history: reviewPromptHistory,
+            currentVersion: currentVersion,
+            now: now,
+            forceEligible: forceEligible ?? Self.debugForceReviewEligibility
+        )
+    }
+
+    /// Persist the attempt after dispatching it to StoreKit. Apple does not
+    /// report whether it displayed a prompt, so a dispatched request consumes
+    /// this version's opportunity.
+    public func markReviewRequested(currentVersion: String, at date: Date = Date()) {
+        reviewPromptHistory.recordRequest(version: currentVersion, at: date)
+        reviewPromptRevision &+= 1
+    }
+
+    private static var debugForceReviewEligibility: Bool {
+#if DEBUG
+        let process = ProcessInfo.processInfo
+        return process.arguments.contains("-ForceReviewPromptEligible")
+            || process.environment["ATTRACTIVE_FORCE_REVIEW_PROMPT"] == "1"
+#else
+        return false
+#endif
+    }
+
     // MARK: - Storage primitives
 
     private enum Key: String {
         case attractorRaw, speed, zoom, hue, lineWidth, glow, integratorRaw, paramOverrides
         case viewModeRaw, sensitiveDependence, showLyapunov, completedLessons
-        case didMigrateViewModeTo3D, hasSeenIntro
+        case didMigrateViewModeTo3D, hasSeenIntro, reviewPromptHistory
     }
 
     private func writeParamOverrides() {
@@ -222,6 +282,12 @@ public final class AttractiveSettings {
     private func writeCompletedLessons() {
         if let data = try? JSONEncoder().encode(Array(completedLessons)) {
             defaults.set(data, forKey: Key.completedLessons.rawValue)
+        }
+    }
+
+    private func writeReviewPromptHistory() {
+        if let data = try? JSONEncoder().encode(reviewPromptHistory) {
+            defaults.set(data, forKey: Key.reviewPromptHistory.rawValue)
         }
     }
 

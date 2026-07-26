@@ -15,6 +15,8 @@ minimal control bar and an attractor picker.
     `advance(timeMs:)`, `points`, and `trailPath()`.
   - `AttractiveSettings.swift` — `@MainActor @Observable` single source of
     truth with `UserDefaults` write-through.
+  - `ReviewPromptPolicy.swift` — persistent session history and the tested
+    eligibility rules for the lesson-completion review request.
 - **Attractive** (app) — `AttractiveApp` (`@main`, dark, status bar hidden),
   `AttractiveCanvas` (`TimelineView(.animation)` + `Canvas`), `ContentView`
   (canvas + control bar + picker sheet).
@@ -34,6 +36,10 @@ xcodebuild -project Attractive.xcodeproj -scheme Attractive \
 # Validate the package alone:
 cd AttractiveCore && swift build
 ```
+
+In a Debug build, pass `-ForceReviewPromptEligible` as a launch argument or
+set `ATTRACTIVE_FORCE_REVIEW_PROMPT=1` to exercise the review-request path
+without waiting for the normal lesson, session, and time thresholds.
 
 ## Android
 

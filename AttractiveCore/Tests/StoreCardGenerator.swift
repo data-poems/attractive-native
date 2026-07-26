@@ -8,9 +8,13 @@ import UniformTypeIdentifiers
 /// trail) onto an App-Store-sized canvas with a caption, the same captioned-card
 /// idea as the clocks widget-shot generator. Runs headless on macOS via
 /// `swift test` (AttractiveKit builds for macOS), so no simulator or browser is
-/// needed; writes PNGs straight to ../screenshots-appstore/<device>/.
+/// needed. Routine tests render into a temporary directory and clean it up.
 ///
-///   cd AttractiveCore && swift test --filter StoreCardGenerator
+/// To deliberately replace the tracked App Store cards:
+///
+///   cd AttractiveCore
+///   ATTRACTIVE_STORE_CARD_OUTPUT=../screenshots-appstore \
+///     swift test --filter StoreCardGenerator/testGenerateStoreCards
 @MainActor
 final class StoreCardGenerator: XCTestCase {
 
@@ -31,11 +35,18 @@ final class StoreCardGenerator: XCTestCase {
     ]
 
     func testGenerateStoreCards() throws {
-        // swift test runs with cwd = the package dir (AttractiveCore); the repo is
-        // its parent.
-        let repo = URL(fileURLWithPath: FileManager.default.currentDirectoryPath).deletingLastPathComponent()
+        let output = Self.outputRoot(
+            environment: ProcessInfo.processInfo.environment,
+            temporaryDirectory: FileManager.default.temporaryDirectory
+        )
+        defer {
+            if output.isTemporary {
+                try? FileManager.default.removeItem(at: output.url)
+            }
+        }
+
         for (label, size) in sizes {
-            let dir = repo.appendingPathComponent("screenshots-appstore/\(label)")
+            let dir = output.url.appendingPathComponent(label)
             try? FileManager.default.removeItem(at: dir)
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
             for (i, card) in cards.enumerated() {
@@ -64,6 +75,38 @@ final class StoreCardGenerator: XCTestCase {
                 XCTFail("ImageRenderer returned nil for widget showcase \(label)")
             }
         }
+    }
+
+    func testOutputPolicyUsesTemporaryDirectoryByDefault() {
+        let temporaryDirectory = URL(fileURLWithPath: "/tmp/attractive-card-tests")
+        let output = Self.outputRoot(environment: [:], temporaryDirectory: temporaryDirectory)
+
+        XCTAssertTrue(output.isTemporary)
+        XCTAssertEqual(output.url.deletingLastPathComponent().path, temporaryDirectory.path)
+        XCTAssertNotEqual(output.url.lastPathComponent, "screenshots-appstore")
+    }
+
+    func testOutputPolicyHonorsExplicitGenerationDirectory() {
+        let destination = "/tmp/deliberate-attractive-store-cards"
+        let output = Self.outputRoot(
+            environment: ["ATTRACTIVE_STORE_CARD_OUTPUT": destination],
+            temporaryDirectory: URL(fileURLWithPath: "/tmp/ignored")
+        )
+
+        XCTAssertFalse(output.isTemporary)
+        XCTAssertEqual(output.url.path, destination)
+    }
+
+    private static func outputRoot(environment: [String: String],
+                                   temporaryDirectory: URL) -> (url: URL, isTemporary: Bool) {
+        if let path = environment["ATTRACTIVE_STORE_CARD_OUTPUT"], !path.isEmpty {
+            return (URL(fileURLWithPath: path).standardizedFileURL, false)
+        }
+
+        return (
+            temporaryDirectory.appendingPathComponent("attractive-store-cards-\(UUID().uuidString)"),
+            true
+        )
     }
 
     /// Per-attractor hue, mirroring `AttractorPalette` in the widget target (kept

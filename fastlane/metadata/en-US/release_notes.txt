@@ -1,1 +1,1 @@
-Initial release.
+Finishing a lesson now opens a recap and keeps the final attractor setup on screen. The recap confirms your saved progress and gives you a clear path back to the curriculum.
