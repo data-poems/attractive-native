@@ -125,7 +125,7 @@ platform :ios do
     loc = info.get_app_info_localizations.find { |l| l.locale == "en-US" } || info.get_app_info_localizations.first
     loc.update(attributes: {
       subtitle: "Chaos & strange attractors",
-      privacyPolicyUrl: "https://dr.eamer.dev/attractive/",
+      privacyPolicyUrl: "https://dr.eamer.dev/attractive/privacy.html",
     })
     UI.success("subtitle + privacy URL set on #{loc.locale}")
 
