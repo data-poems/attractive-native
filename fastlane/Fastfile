@@ -1,3 +1,5 @@
+require File.expand_path("release_helpers", __dir__)
+
 default_platform(:ios)
 
 # Auth: deliver/spaceship auto-detect the App Store Connect API key from
@@ -5,27 +7,40 @@ default_platform(:ios)
 # (run `source ~/.appstoreconnect/env.sh` first).
 
 platform :ios do
-  desc "Report the iOS app's versions, states, and latest TestFlight build"
-  lane :inspect do
+  private_lane :connect_app do
     app_store_connect_api_key(
       key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
       issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
       key_content: ENV["APP_STORE_CONNECT_API_KEY_KEY"],
       is_key_content_base64: false
     )
-    app = Spaceship::ConnectAPI::App.find("com.lukesteuber.attractive")
+    AttractiveRelease.exact_app!(
+      Spaceship::ConnectAPI::App.find(AttractiveRelease::APP_IDENTIFIER)
+    )
+  end
+
+  desc "Report the iOS app's versions, states, and latest TestFlight build"
+  lane :inspect do
+    app = connect_app
     UI.success("App: #{app.name}  (#{app.bundle_id})")
-    app.get_app_store_versions(filter: { platform: "IOS" }).sort_by(&:version_string).each do |v|
+    versions = app.get_app_store_versions(filter: { platform: AttractiveRelease::IOS_PLATFORM })
+    AttractiveRelease.sort_versions(versions).each do |v|
       UI.message("  version #{v.version_string} — #{v.app_store_state}")
     end
   end
 
   desc "Upload the iOS listing metadata (no binary, no screenshots, no submit)"
   lane :upload_listing do
+    version = AttractiveRelease.release_version!
+    app = connect_app
+    AttractiveRelease.editable_version!(
+      app.get_app_store_versions(filter: { platform: AttractiveRelease::IOS_PLATFORM }),
+      version: version
+    )
     deliver(
-      app_identifier: "com.lukesteuber.attractive",
-      app_version: "1.0",
-      metadata_path: "./fastlane/metadata",
+      app_identifier: AttractiveRelease::APP_IDENTIFIER,
+      app_version: version,
+      metadata_path: File.expand_path("metadata", __dir__),
       skip_binary_upload: true,
       skip_screenshots: true,
       skip_app_version_update: true,
@@ -36,18 +51,15 @@ platform :ios do
     )
   end
 
-  desc "Report screenshot + metadata coverage for the editable iOS version"
+  desc "Report screenshot + metadata coverage for the canonical iOS version"
   lane :shots do
-    app_store_connect_api_key(
-      key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
-      issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
-      key_content: ENV["APP_STORE_CONNECT_API_KEY_KEY"],
-      is_key_content_base64: false
+    version = AttractiveRelease.release_version!
+    app = connect_app
+    v = AttractiveRelease.version!(
+      app.get_app_store_versions(filter: { platform: AttractiveRelease::IOS_PLATFORM }),
+      version: version
     )
-    app = Spaceship::ConnectAPI::App.find("com.lukesteuber.attractive")
-    v = app.get_app_store_versions(filter: { platform: "IOS" }).find { |x| x.app_store_state == "PREPARE_FOR_SUBMISSION" } ||
-        app.get_app_store_versions(filter: { platform: "IOS" }).first
-    loc = v.get_app_store_version_localizations.find { |l| l.locale == "en-US" } || v.get_app_store_version_localizations.first
+    loc = AttractiveRelease.localization!(v.get_app_store_version_localizations)
     UI.success("version #{v.version_string} (#{v.app_store_state}), locale #{loc.locale}")
     UI.message("  description: #{loc.description.to_s.length} chars, keywords: #{loc.keywords.to_s.length} chars")
     sets = loc.get_app_screenshot_sets
@@ -60,17 +72,30 @@ platform :ios do
 
   desc "Upload App Store screenshots (the macOS-rendered attractor cards)"
   lane :upload_screenshots do
+    version = AttractiveRelease.release_version!
+    app = connect_app
+    AttractiveRelease.editable_version!(
+      app.get_app_store_versions(filter: { platform: AttractiveRelease::IOS_PLATFORM }),
+      version: version
+    )
+
+    screenshot_sources = { "iphone-6.9" => "iphone69", "ipad-13" => "ipad13" }.map do |src, prefix|
+      files = Dir[File.expand_path("../screenshots-appstore/#{src}/{0[1-9],10}-*.png", __dir__)].sort
+      UI.user_error!("no #{src} screenshots found") if files.empty?
+      [prefix, files]
+    end
+
     staged = File.expand_path("../build/screenshots/en-US", __dir__)
     FileUtils.rm_rf(staged)
     FileUtils.mkdir_p(staged)
-    { "iphone-6.9" => "iphone69", "ipad-13" => "ipad13" }.each do |src, prefix|
-      Dir[File.expand_path("../screenshots-appstore/#{src}/0[1-9]-*.png", __dir__)].sort.each do |f|
+    screenshot_sources.each do |prefix, files|
+      files.each do |f|
         FileUtils.cp(f, File.join(staged, "#{prefix}-#{File.basename(f)}"))
       end
     end
     deliver(
-      app_identifier: "com.lukesteuber.attractive",
-      app_version: "1.0",
+      app_identifier: AttractiveRelease::APP_IDENTIFIER,
+      app_version: version,
       screenshots_path: File.expand_path("../build/screenshots", __dir__),
       overwrite_screenshots: true,
       skip_binary_upload: true,
@@ -85,16 +110,13 @@ platform :ios do
 
   desc "Verify + dedup screenshots (deliver's read-back race can duplicate them)"
   lane :dedup_shots do
-    app_store_connect_api_key(
-      key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
-      issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
-      key_content: ENV["APP_STORE_CONNECT_API_KEY_KEY"],
-      is_key_content_base64: false
+    version = AttractiveRelease.release_version!
+    app = connect_app
+    v = AttractiveRelease.editable_version!(
+      app.get_app_store_versions(filter: { platform: AttractiveRelease::IOS_PLATFORM }),
+      version: version
     )
-    app = Spaceship::ConnectAPI::App.find("com.lukesteuber.attractive")
-    v = app.get_app_store_versions(filter: { platform: "IOS" }).find { |x| x.app_store_state == "PREPARE_FOR_SUBMISSION" } ||
-        app.get_app_store_versions(filter: { platform: "IOS" }).first
-    loc = v.get_app_store_version_localizations.find { |l| l.locale == "en-US" } || v.get_app_store_version_localizations.first
+    loc = AttractiveRelease.localization!(v.get_app_store_version_localizations)
     loc.get_app_screenshot_sets.each do |set|
       seen = {}
       set.app_screenshots.each do |sh|
@@ -111,18 +133,12 @@ platform :ios do
 
   desc "Set first-version app-info (subtitle + categories) directly — deliver can't on a first version"
   lane :prepare_app_info do
-    app_store_connect_api_key(
-      key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
-      issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
-      key_content: ENV["APP_STORE_CONNECT_API_KEY_KEY"],
-      is_key_content_base64: false
-    )
-    app = Spaceship::ConnectAPI::App.find("com.lukesteuber.attractive")
+    app = connect_app
     info = app.fetch_edit_app_info
     UI.user_error!("no editable AppInfo found") unless info
     UI.message("AppInfo #{info.id} state #{info.app_store_state}")
 
-    loc = info.get_app_info_localizations.find { |l| l.locale == "en-US" } || info.get_app_info_localizations.first
+    loc = AttractiveRelease.localization!(info.get_app_info_localizations)
     loc.update(attributes: {
       subtitle: "Chaos & strange attractors",
       privacyPolicyUrl: "https://dr.eamer.dev/attractive/privacy.html",
@@ -136,49 +152,53 @@ platform :ios do
     UI.success("categories set: Education / Graphics & Design")
   end
 
-  desc "Attach the latest processed build to the editable iOS version"
-  lane :select_latest_build do
-    app_store_connect_api_key(
-      key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
-      issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
-      key_content: ENV["APP_STORE_CONNECT_API_KEY_KEY"],
-      is_key_content_base64: false
+  desc "Attach the canonical processed build to the editable iOS version"
+  lane :select_latest_build do |options|
+    version = AttractiveRelease.release_version!
+    build_number = (options[:build] || AttractiveRelease.build_number!).to_s
+    app = connect_app
+    v = AttractiveRelease.editable_version!(
+      app.get_app_store_versions(filter: { platform: AttractiveRelease::IOS_PLATFORM }),
+      version: version
     )
-    app = Spaceship::ConnectAPI::App.find("com.lukesteuber.attractive")
-    v = app.get_app_store_versions(filter: { platform: "IOS" }).find { |x| x.app_store_state == "PREPARE_FOR_SUBMISSION" }
-    build = app.get_builds.max_by { |b| b.version.to_i }
-    UI.user_error!("no builds found") unless build
+    candidates = Spaceship::ConnectAPI::Build.all(
+      app_id: app.id,
+      version: version,
+      build_number: build_number,
+      platform: AttractiveRelease::IOS_PLATFORM,
+      processing_states: "VALID"
+    )
+    build = AttractiveRelease.build!(candidates, version: version, build_number: build_number)
     v.select_build(build_id: build.id)
     UI.success("selected build #{build.version} for version #{v.version_string}")
   end
 
   desc "Pre-submission audit: report every required field's presence"
   lane :audit do
-    app_store_connect_api_key(
-      key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
-      issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
-      key_content: ENV["APP_STORE_CONNECT_API_KEY_KEY"],
-      is_key_content_base64: false
-    )
-    app = Spaceship::ConnectAPI::App.find("com.lukesteuber.attractive")
-    info = app.fetch_edit_app_info
-    iloc = info.get_app_info_localizations.find { |l| l.locale == "en-US" }
+    version = AttractiveRelease.release_version!
+    app = connect_app
+    info = app.fetch_edit_app_info || app.fetch_live_app_info || app.fetch_latest_app_info
+    UI.user_error!("no AppInfo found") unless info
+    iloc = AttractiveRelease.localization!(info.get_app_info_localizations)
     UI.message("name           : #{iloc.name}")
     UI.message("subtitle       : #{iloc.subtitle}")
     UI.message("privacy URL    : #{iloc.privacy_policy_url}")
     UI.message("primary cat    : #{info.primary_category&.id}")
     UI.message("secondary cat  : #{info.secondary_category&.id}")
-    ard = (info.fetch_age_rating_declaration rescue nil)
+    ard = info.fetch_age_rating_declaration
     UI.message("age rating     : #{ard ? 'present' : 'MISSING'}")
-    v = app.get_app_store_versions(filter: { platform: "IOS" }).find { |x| x.app_store_state == "PREPARE_FOR_SUBMISSION" }
-    vloc = v.get_app_store_version_localizations.find { |l| l.locale == "en-US" }
+    v = AttractiveRelease.version!(
+      app.get_app_store_versions(filter: { platform: AttractiveRelease::IOS_PLATFORM }),
+      version: version
+    )
+    vloc = AttractiveRelease.localization!(v.get_app_store_version_localizations)
     UI.message("version        : #{v.version_string} (#{v.app_store_state})")
     UI.message("description    : #{vloc.description.to_s.length} chars")
     UI.message("keywords       : #{vloc.keywords.to_s.length} chars")
     UI.message("promo text     : #{vloc.promotional_text.to_s.length} chars")
     UI.message("support URL    : #{vloc.support_url}")
     vloc.get_app_screenshot_sets.each { |s| UI.message("screenshots    : #{s.screenshot_display_type} = #{s.app_screenshots.count}") }
-    b = (v.build rescue nil)
+    b = v.build
     UI.message("selected build : #{b&.version || 'none (select after processing)'}")
   end
 end
