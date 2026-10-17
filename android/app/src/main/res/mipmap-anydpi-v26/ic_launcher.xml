@@ -1,6 +1,6 @@
 <!--
   File Purpose: Composes Attractive's adaptive launcher icon for all supported Android versions.
-  Primary Components: Dark background plus orbit foreground and monochrome layer.
+  Primary Components: Dark background, iOS attractor foreground, Lorenz monochrome.
   Inputs/Outputs: Used by launchers through AndroidManifest icon metadata.
 -->
 <adaptive-icon
@@ -8,6 +8,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:ignore="ObsoleteSdkInt">
     <background android:drawable="@color/attractive_icon_background" />
-    <foreground android:drawable="@drawable/ic_launcher_foreground" />
-    <monochrome android:drawable="@drawable/ic_launcher_foreground" />
+    <foreground android:drawable="@mipmap/ic_launcher_foreground" />
+    <monochrome android:drawable="@mipmap/ic_launcher_monochrome" />
 </adaptive-icon>
