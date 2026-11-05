@@ -3,14 +3,15 @@
   "versionName": "1.0.2",
   "versionCode": 3,
   "channel": "local candidate; not publicly published",
-  "apkSha256": "9674b69f2ab57c521fa3fa1c6d19cf28202c6de0ec8edbc5603b18bf7aef8240",
+  "apkSha256": "f2924f069d7b185df5948a6e6da5a8934cf66ef50ac371d71469a51c330ca050",
   "certificateSha256": "e11e2688c8f306726d3a453bd0ced55da6a05a91ccb94b98b790a93420de45c1",
   "checks": {
     "assembleRelease": "passed",
     "lintDebug": "passed",
     "unitTests": 13,
     "unitFailures": 0,
-    "physicalDevice": "pending"
+    "physicalDevice": "temporary release-signed probe verified warm native wide/tall/full measurement and toolbar swipe; final production artifact installation pending",
+    "temporaryProbeRemoved": true
   },
   "sidecarFiles": {
     ".gitignore": "f757894c2e9de12a6d0b11a3c4b58a7805f69dd1e8661b24c4dc07169b9d7892",

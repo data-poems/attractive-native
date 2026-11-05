@@ -1,5 +1,7 @@
 /* Android shell adaptation; the separately maintained visualizer stays unchanged. */
-@media (max-width: 600px) and (max-height: 480px) {
+/* Every narrow window keeps all toolbar actions reachable, including tall
+   compatibility frames and ordinary phones. These are CSS-pixel targets. */
+@media (max-width: 640px) {
   .floating-controls {
     box-sizing: border-box;
     max-width: calc(100vw - 24px);
@@ -20,6 +22,12 @@
     height: 48px;
     flex-shrink: 0;
   }
+  .stats { bottom: 88px; }
+}
+
+/* Samsung compatibility windows may expose ~598×530 CSS pixels at the physical
+   display DPR. Fit short windows without changing display density or page zoom. */
+@media (max-width: 640px) and (max-height: 600px) {
   .stats { top: 12px; bottom: auto; left: auto; right: 12px; }
   .sidebar-header { padding: 12px 68px 12px 16px; }
   .sidebar-content { min-height: 0; }

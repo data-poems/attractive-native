@@ -1,7 +1,9 @@
 # Flip cover adaptation — November 4, 2026
 
-Status: signed local candidate, browser and JVM checks passed; physical cover
-validation is pending. Android 1.0.2 (3) updates the existing package and release
+Status: signed local candidate, browser and JVM checks passed; a temporary
+release-signed probe verified actual wide/full cover layout and toolbar swiping.
+The final artifact without the probe still needs its installation check.
+Android 1.0.2 (3) updates the existing package and release
 certificate. It has not been published to a download catalog or store.
 
 ## Change and reuse
@@ -9,16 +11,22 @@ certificate. It has not been published to a download catalog or store.
 At 379 × 336 CSS pixels the existing floating toolbar extended past x499, hiding
 Equations, 3D, Lyapunov and Lessons. Its smallest buttons were 36 pixels. The
 Android asset preparation now includes the tracked `android/compact-window.css`
-at widths up to 600 and heights up to 480 pixels. The toolbar scrolls horizontally
-and has 48-pixel controls; the status panel moves above it. Menu/panel close
-controls are 48 pixels, and panel bodies remain scrollable. Taller windows retain
-their existing layout. The independent web sidecar and generated `android/web`
+at widths up to 640 CSS pixels. The toolbar scrolls horizontally
+and has 48-CSS-pixel controls; the status panel sits above it with a bottom offset
+of 88 CSS pixels. Menu/panel close
+controls are 48 CSS pixels, and panel bodies remain scrollable. These dimensions
+are web targets, not a claim of 48 physical Android dp under Samsung scaling.
+Short windows up to 600 CSS pixels high additionally put stats at the top right
+and adapt the panel bodies and onboarding tooltip. Tall windows and narrow inner
+phones keep the scrolling toolbar and reachable close controls. The independent web sidecar and generated `android/web`
 are not edited by hand.
 
 The native shell retains its WebView and uses a `SafeViewport` parent instead of
 unbounded window layout. It fits a clear rectangle around visible system bars
 and actual cutout bounds, consuming those insets once. It observes inset, size
-and layout changes. Samsung's compatibility-frame cutout outside the app window
+and layout changes. Bounds are calculated from the incoming window measure specs
+before `FrameLayout` measures the WebView; inset changes request measurement and
+origin changes queue a fresh pass outside layout. Samsung's compatibility-frame cutout outside the app window
 does not remove usable space again. Only Samsung SM-F766/SM-F776 windows within
 3% of the portrait 948:1048 shape use a no-cutout fallback, reserving the strip
 below y839/1048. The fallback comes from the physical Flip8 measurements in
@@ -44,7 +52,9 @@ in-place update can preserve data. The current artifact checksum, test count and
 the original sidecar input hashes are in
 `docs/reviews/flip-cover-build-20261104.json`. The existing API 36 target remains;
 the newly raised `OldTargetApi` lint notice is explicitly suppressed rather than
-silently migrating SDK behavior in this viewport change. Other lint checks pass.
+silently migrating SDK behavior in this viewport change. The installed Gradle
+wrapper is also retained, with the `AndroidGradlePluginVersion` update-availability
+notice suppressed separately from source correctness checks. Other lint checks pass.
 
 Touch-enabled Chromium exercised the actual prepared offline assets at
 379 × 336, 399 × 353 and 550 × 400. It checked toolbar bounds and target sizes,
@@ -52,6 +62,43 @@ scrolled to the final action, opened/dismissed Lessons and Equations, scrolled
 settings, and resized through an inner-phone window. No page errors or external
 requests occurred. Details are in `docs/reviews/flip-cover-browser-20261104.json`.
 These are browser checks, not Android touch, GPU, fold or TalkBack evidence.
+
+Physical Samsung SM-F776U1 cover evidence then exposed two gaps that the browser
+checks could not detect. Its wide app window measured 1422×1259 native pixels,
+but WebView exposed approximately 598×530 CSS pixels at DPR 2.375 rather than the
+Activity's compatibility density of 3.0. All stylesheets loaded; the former
+600×480 media query simply did not match. Enabling `useWideViewPort` had no
+observed effect and was removed. The compact rule now includes this actual
+short-window size without changing display density or page zoom. Browser checks
+at 598×530 and 598×600 confirm 48×48 CSS buttons, a horizontally scrollable toolbar,
+and stats at top 12 pixels. Additional touch-enabled browser checks at 372×662,
+360×840 and 598×530 confirm that the toolbar stays inside the viewport, every
+visible toolbar action has a 48×48 CSS target, stats do not overlap the toolbar,
+the final Lessons action can be scrolled fully into view, and Lessons opens and
+closes with an in-bounds 48×48 CSS close target. No page errors or external
+requests occurred. Tall windows remain outside the short-window HUD rule while
+keeping the width-based toolbar adaptations.
+
+Warm resizing through Samsung's wide → tall → full-panel modes also showed that
+changing padding during layout could clip an already measured full-height
+WebView. Before correction, full mode had root 1422×1572 with bottom padding 314,
+but child measured/actual size stayed 1422×1572 and DOM height 662. Computing the
+padding before child measurement corrected the same repeated resize on hardware:
+
+| Mode | Native root | Bottom padding | WebView measured and actual | DOM inner size | Short-window HUD |
+|---|---|---|---|---|---|
+| Wide | 1422×1259 | 0 | 1422×1259 | 598×530 | Yes |
+| Tall | 885×1572 | 0 | 885×1572 | 372×662 | No |
+| Full panel | 1422×1572 | 314 | 1422×1258 | 598×529 | Yes |
+
+The settled full-panel visual viewport was approximately 598.74×529.68 at scale
+1. A physical horizontal toolbar swipe revealed the last Lessons button fully
+above the camera strip beginning at physical y839. Local evidence is in
+`/tmp/attractive-fixed-resize-metrics.log` and
+`/tmp/attractive-fixed-full-toolbar.png`. The probe collected geometry only; all
+temporary logging and listeners were removed from production source, and release
+WebView debugging/security settings remain unchanged. Final APK installation,
+lesson dismissal, unfold/refold continuity and TalkBack remain separate gates.
 
 The local sidecar is the same ignored snapshot used by the existing Android
 build checkout. This change preserves those inputs; it does not establish a new
@@ -62,8 +109,9 @@ provisioned sidecar and vendored dependencies as documented in `android/README.m
 
 Update the existing app without uninstalling it, select Strangely Attractive in
 MultiStar's cover App Tray, close/unlock the Flip, and launch by tapping its icon.
-Check the wide and full-panel frames, toolbar swiping, panel dismissal and
-unfold/refold continuity. Do not call the adaptation device-tested before this.
+Repeat the wide and full-panel frames with the final artifact, panel dismissal
+and unfold/refold continuity. The probe's geometry and toolbar-swipe evidence does
+not establish every interaction or accessibility behavior.
 
 Rollback reverses the native wrapper, compact stylesheet and preparation hook;
 it does not change the saved-data schema. Do not uninstall the production app to

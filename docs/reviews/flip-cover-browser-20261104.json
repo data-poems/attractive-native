@@ -1,6 +1,6 @@
 {
   "date": "2026-11-04",
-  "kind": "Chromium viewport checks; not physical device evidence",
+  "kind": "Chromium CSS viewport checks; not physical Android dp evidence",
   "results": [
     {
       "width": 379,
@@ -226,6 +226,270 @@
         "equations-open-close",
         "settings-scroll",
         "inner-cover-resize"
+      ],
+      "pageErrors": [],
+      "externalRequests": []
+    },
+    {
+      "width": 372,
+      "height": 662,
+      "compact": false,
+      "toolbar": {
+        "x": 12,
+        "y": 590,
+        "width": 348,
+        "height": 60,
+        "right": 360,
+        "bottom": 650
+      },
+      "toolbarScrollWidth": 629,
+      "stats": {
+        "x": 231.8125,
+        "y": 481.625,
+        "width": 128.1875,
+        "height": 92.375,
+        "right": 360,
+        "bottom": 574
+      },
+      "touchTargets": [
+        {
+          "id": "speedDownBtn",
+          "w": 48,
+          "h": 48
+        },
+        {
+          "id": "floatingPlayPauseBtn",
+          "w": 48,
+          "h": 48
+        },
+        {
+          "id": "speedUpBtn",
+          "w": 48,
+          "h": 48
+        },
+        {
+          "id": "randomBtn",
+          "w": 48,
+          "h": 48
+        },
+        {
+          "id": "undoBtn",
+          "w": 48,
+          "h": 48
+        },
+        {
+          "id": "exportBtn",
+          "w": 48,
+          "h": 48
+        },
+        {
+          "id": "infoBtn",
+          "w": 48,
+          "h": 48
+        },
+        {
+          "id": "equationsBtn",
+          "w": 48,
+          "h": 48
+        },
+        {
+          "id": "view3dBtn",
+          "w": 48,
+          "h": 48
+        },
+        {
+          "id": "lyapunovBtn",
+          "w": 48,
+          "h": 48
+        },
+        {
+          "id": "lessonsBtn",
+          "w": 48,
+          "h": 48
+        }
+      ],
+      "passed": [
+        "toolbar-contained",
+        "48px-css-targets",
+        "stats-clear-of-toolbar",
+        "scroll-to-last-toolbar-action",
+        "lessons-open-close"
+      ],
+      "pageErrors": [],
+      "externalRequests": []
+    },
+    {
+      "width": 360,
+      "height": 840,
+      "compact": false,
+      "toolbar": {
+        "x": 12,
+        "y": 768,
+        "width": 336,
+        "height": 60,
+        "right": 348,
+        "bottom": 828
+      },
+      "toolbarScrollWidth": 629,
+      "stats": {
+        "x": 219.8125,
+        "y": 659.625,
+        "width": 128.1875,
+        "height": 92.375,
+        "right": 348,
+        "bottom": 752
+      },
+      "touchTargets": [
+        {
+          "id": "speedDownBtn",
+          "w": 48,
+          "h": 48
+        },
+        {
+          "id": "floatingPlayPauseBtn",
+          "w": 48,
+          "h": 48
+        },
+        {
+          "id": "speedUpBtn",
+          "w": 48,
+          "h": 48
+        },
+        {
+          "id": "randomBtn",
+          "w": 48,
+          "h": 48
+        },
+        {
+          "id": "undoBtn",
+          "w": 48,
+          "h": 48
+        },
+        {
+          "id": "exportBtn",
+          "w": 48,
+          "h": 48
+        },
+        {
+          "id": "infoBtn",
+          "w": 48,
+          "h": 48
+        },
+        {
+          "id": "equationsBtn",
+          "w": 48,
+          "h": 48
+        },
+        {
+          "id": "view3dBtn",
+          "w": 48,
+          "h": 48
+        },
+        {
+          "id": "lyapunovBtn",
+          "w": 48,
+          "h": 48
+        },
+        {
+          "id": "lessonsBtn",
+          "w": 48,
+          "h": 48
+        }
+      ],
+      "passed": [
+        "toolbar-contained",
+        "48px-css-targets",
+        "stats-clear-of-toolbar",
+        "scroll-to-last-toolbar-action",
+        "lessons-open-close"
+      ],
+      "pageErrors": [],
+      "externalRequests": []
+    },
+    {
+      "width": 598,
+      "height": 530,
+      "compact": true,
+      "toolbar": {
+        "x": 15.875,
+        "y": 454,
+        "width": 574,
+        "height": 60,
+        "right": 589.875,
+        "bottom": 514
+      },
+      "toolbarScrollWidth": 637,
+      "stats": {
+        "x": 445.984375,
+        "y": 12,
+        "width": 140.015625,
+        "height": 102.75,
+        "right": 586,
+        "bottom": 114.75
+      },
+      "touchTargets": [
+        {
+          "id": "speedDownBtn",
+          "w": 48,
+          "h": 48
+        },
+        {
+          "id": "floatingPlayPauseBtn",
+          "w": 48,
+          "h": 48
+        },
+        {
+          "id": "speedUpBtn",
+          "w": 48,
+          "h": 48
+        },
+        {
+          "id": "randomBtn",
+          "w": 48,
+          "h": 48
+        },
+        {
+          "id": "undoBtn",
+          "w": 48,
+          "h": 48
+        },
+        {
+          "id": "exportBtn",
+          "w": 48,
+          "h": 48
+        },
+        {
+          "id": "infoBtn",
+          "w": 48,
+          "h": 48
+        },
+        {
+          "id": "equationsBtn",
+          "w": 48,
+          "h": 48
+        },
+        {
+          "id": "view3dBtn",
+          "w": 48,
+          "h": 48
+        },
+        {
+          "id": "lyapunovBtn",
+          "w": 48,
+          "h": 48
+        },
+        {
+          "id": "lessonsBtn",
+          "w": 48,
+          "h": 48
+        }
+      ],
+      "passed": [
+        "toolbar-contained",
+        "48px-css-targets",
+        "stats-clear-of-toolbar",
+        "scroll-to-last-toolbar-action",
+        "lessons-open-close"
       ],
       "pageErrors": [],
       "externalRequests": []
