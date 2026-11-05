@@ -19,6 +19,7 @@ class CanonicalWebAssetsTest {
         listOf(
             "index.html",
             "style.css",
+            "compact-window.css",
             "main.js",
             "attractive-3d.js",
             "vendor/three.min.js",
@@ -42,6 +43,7 @@ class CanonicalWebAssetsTest {
         assertTrue(html.contains("""src="vendor/katex.min.js""""))
         assertTrue(html.contains("""href="vendor/katex/katex.min.css""""))
         assertTrue(html.contains("""src="main.js""""))
+        assertTrue(html.contains("""href="compact-window.css""""))
         assertFalse(html.contains("cdn.jsdelivr.net"))
         assertFalse(html.contains("fonts.googleapis.com"))
         assertFalse(html.contains("stats.dr.eamer.dev"))

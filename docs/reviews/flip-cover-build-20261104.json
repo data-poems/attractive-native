@@ -1,0 +1,29 @@
+{
+  "date": "2026-11-04",
+  "versionName": "1.0.2",
+  "versionCode": 3,
+  "channel": "local candidate; not publicly published",
+  "apkSha256": "9674b69f2ab57c521fa3fa1c6d19cf28202c6de0ec8edbc5603b18bf7aef8240",
+  "certificateSha256": "e11e2688c8f306726d3a453bd0ced55da6a05a91ccb94b98b790a93420de45c1",
+  "checks": {
+    "assembleRelease": "passed",
+    "lintDebug": "passed",
+    "unitTests": 13,
+    "unitFailures": 0,
+    "physicalDevice": "pending"
+  },
+  "sidecarFiles": {
+    ".gitignore": "f757894c2e9de12a6d0b11a3c4b58a7805f69dd1e8661b24c4dc07169b9d7892",
+    "README.md": "b346bc93cd96da075aef83eb64a6ee7373d133af12b0409b9e7c8db4486c34d8",
+    "attractive-3d.js": "94ab019c7a94bfd64b01813c66e790f03213e0b0f605525dbbaa0027e14943c8",
+    "attractive-equations.js": "9af76d998dab0a5c27bd8eb9ea52bc30c1fabe249ad0da7c52ba211b60d7c785",
+    "attractive-inspect.js": "e866d783d66d39079ee9fcd21beb78afb7b6e6e16889c8e143193eaaf64c24c6",
+    "attractive-lessons.js": "235b4b44ec7ca3f26d8e671d172755d6bb0a0c19d0c0d17d4d06f472306043ac",
+    "attractive-lyapunov.js": "98595e6ce16e6807657f6710f5ce435b4f045f36b1018815d7c74c20a86821ef",
+    "index.html": "5738a1b3724a7873924d9c0cafdba17368603a2234da3c088cdd6a33731ac5fe",
+    "main.js": "1600b19c4a33d9de94245693fa52b359e9324fd3cf2deb3d52d23308871a9b79",
+    "onboarding.js": "06d3c734e72e123eb41a41d6463ebd110709fb38c1bfe30410eead18d7785834",
+    "social-card.png": "dce430c3a1c83f2e80f9506430ce2717c771ad1aa78458b35086243912502d6d",
+    "style.css": "5c7642f143fce02d218074791d19c781af6ed6d420b14c65dcb283bb8b811fe0"
+  }
+}

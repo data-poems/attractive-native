@@ -104,6 +104,8 @@ android {
         checkReleaseBuilds = true
         warningsAsErrors = true
         disable += "ObsoleteSdkInt"
+        // Keep the tested API 36 baseline; an SDK migration is a separate change.
+        disable += "OldTargetApi"
     }
 }
 

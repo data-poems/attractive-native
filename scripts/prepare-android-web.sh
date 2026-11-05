@@ -31,6 +31,7 @@ do
   cp "${SRC}/${name}" "${OUT}/${name}"
 done
 cp -R "${SRC}/vendor" "${OUT}/vendor"
+cp "${ROOT}/android/compact-window.css" "${OUT}/compact-window.css"
 
 OUT="${OUT}" python3 - <<'PY'
 from pathlib import Path
@@ -39,6 +40,7 @@ import os, re
 out = Path(os.environ["OUT"])
 html_path = out / "index.html"
 html = html_path.read_text(encoding="utf-8")
+html = html.replace('</head>', '  <link rel="stylesheet" href="compact-window.css">\n</head>')
 
 # Drop remote font preconnect/stylesheet — use system fonts offline.
 html = re.sub(

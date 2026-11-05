@@ -20,6 +20,8 @@ import android.os.Bundle
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowManager
+import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
@@ -31,13 +33,19 @@ import android.widget.Toast
 
 class MainActivity : Activity() {
     private lateinit var webView: WebView
+    private lateinit var viewport: SafeViewport
     private var backCallback: OnBackInvokedCallback? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         webView = createWebView()
-        setContentView(webView)
+        viewport = SafeViewport(this).apply {
+            addView(webView, FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT,
+            ))
+        }
+        setContentView(viewport)
         keepScreenImmersive()
 
         val restored = savedInstanceState?.let { webView.restoreState(it) } != null
@@ -139,11 +147,9 @@ class MainActivity : Activity() {
 
     private fun keepScreenImmersive() {
         val activityWindow = window ?: return
-        activityWindow.setFlags(
-            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-        )
+        activityWindow.clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            activityWindow.setDecorFitsSystemWindows(false)
             activityWindow.insetsController?.hide(
                 WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars(),
             )
@@ -156,6 +162,7 @@ class MainActivity : Activity() {
                     View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
                     View.SYSTEM_UI_FLAG_LAYOUT_STABLE
         }
+        viewport.requestApplyInsets()
     }
 
     private inner class AttractiveWebViewClient : WebViewClient() {
