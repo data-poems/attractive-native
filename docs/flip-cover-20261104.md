@@ -1,8 +1,9 @@
 # Flip cover adaptation — November 4, 2026
 
-Status: signed local candidate, browser and JVM checks passed; a temporary
-release-signed probe verified actual wide/full cover layout and toolbar swiping.
-The final artifact without the probe still needs its installation check.
+Status: signed local candidate installed; browser, JVM and selected physical
+cover checks passed. The final artifact cold-launched from the real SystemUI
+cover App Tray and passed wide/tall/full resizing and Lessons open/dismiss checks.
+Physical unfold/refold continuity and TalkBack remain pending.
 Android 1.0.2 (3) updates the existing package and release
 certificate. It has not been published to a download catalog or store.
 
@@ -97,8 +98,25 @@ above the camera strip beginning at physical y839. Local evidence is in
 `/tmp/attractive-fixed-resize-metrics.log` and
 `/tmp/attractive-fixed-full-toolbar.png`. The probe collected geometry only; all
 temporary logging and listeners were removed from production source, and release
-WebView debugging/security settings remain unchanged. Final APK installation,
-lesson dismissal, unfold/refold continuity and TalkBack remain separate gates.
+WebView debugging/security settings remain unchanged.
+
+The coordinating session then installed the final production artifact with
+SHA-256 `f2924f069d7b185df5948a6e6da5a8934cf66ef50ac371d71469a51c330ca050`.
+After force-stopping the old probe process, it cold-launched the app by tapping
+its real SystemUI App Tray icon on the closed Flip's display 1. The final
+wide → tall → full → wide sequence passed. In the full frame, the recorded
+toolbar swipe `(850,765) → (250,765)` exposed the final Lessons action at
+`(885,765)`; it opened Guided Lessons, and the close control at `(890,50)`
+dismissed the panel on the physical cover. Camera clearance was correct, and
+the tall-frame bottom statistics did not overlap the toolbar. These are recorded
+cover input coordinates, not CSS-pixel or Android-dp measurements.
+
+Final screenshots are temporarily stored on Napoleon at
+`/tmp/attractive-cover-final-wide.png`, `/tmp/attractive-cover-final-tall.png`,
+`/tmp/attractive-cover-final-full.png` and
+`/tmp/attractive-cover-final-lessons.png`. The build receipt records this final
+artifact evidence separately from the earlier probe. It does not establish
+physical unfold/refold continuity or TalkBack behavior.
 
 The local sidecar is the same ignored snapshot used by the existing Android
 build checkout. This change preserves those inputs; it does not establish a new
@@ -107,11 +125,9 @@ provisioned sidecar and vendored dependencies as documented in `android/README.m
 
 ## Remaining physical check and rollback
 
-Update the existing app without uninstalling it, select Strangely Attractive in
-MultiStar's cover App Tray, close/unlock the Flip, and launch by tapping its icon.
-Repeat the wide and full-panel frames with the final artifact, panel dismissal
-and unfold/refold continuity. The probe's geometry and toolbar-swipe evidence does
-not establish every interaction or accessibility behavior.
+Physical unfold/refold continuity and TalkBack remain to check with the installed
+final artifact. The verified cold tray launch, frame resizing, toolbar swipe and
+Lessons dismissal do not establish every interaction or accessibility behavior.
 
 Rollback reverses the native wrapper, compact stylesheet and preparation hook;
 it does not change the saved-data schema. Do not uninstall the production app to

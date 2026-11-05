@@ -10,7 +10,7 @@
     "lintDebug": "passed",
     "unitTests": 13,
     "unitFailures": 0,
-    "physicalDevice": "temporary release-signed probe verified warm native wide/tall/full measurement and toolbar swipe; final production artifact installation pending",
+    "physicalDevice": "final production artifact installed; cold SystemUI cover App Tray launch, wide/tall/full/wide resizing, toolbar swipe and Guided Lessons open/dismiss verified on the closed Flip display 1; physical unfold/refold and TalkBack pending",
     "temporaryProbeRemoved": true
   },
   "sidecarFiles": {
@@ -26,5 +26,63 @@
     "onboarding.js": "06d3c734e72e123eb41a41d6463ebd110709fb38c1bfe30410eead18d7785834",
     "social-card.png": "dce430c3a1c83f2e80f9506430ce2717c771ad1aa78458b35086243912502d6d",
     "style.css": "5c7642f143fce02d218074791d19c781af6ed6d420b14c65dcb283bb8b811fe0"
+  },
+  "physicalValidation": {
+    "date": "2026-11-04",
+    "evidenceAttribution": "Coordinating session physical review",
+    "deviceModel": "SM-F776U1",
+    "artifactSha256": "f2924f069d7b185df5948a6e6da5a8934cf66ef50ac371d71469a51c330ca050",
+    "finalArtifactInstalled": true,
+    "oldProbeProcessForceStopped": true,
+    "coldLaunch": {
+      "source": "SystemUI cover App Tray icon",
+      "displayId": 1,
+      "phoneClosed": true,
+      "passed": true
+    },
+    "frameSequence": [
+      "wide",
+      "tall",
+      "full",
+      "wide"
+    ],
+    "frameSequencePassed": true,
+    "fullFrame": {
+      "coordinateSpace": "recorded cover input coordinates",
+      "toolbarSwipe": {
+        "from": [
+          850,
+          765
+        ],
+        "to": [
+          250,
+          765
+        ]
+      },
+      "finalLessonsControl": [
+        885,
+        765
+      ],
+      "guidedLessonsOpened": true,
+      "closeControl": [
+        890,
+        50
+      ],
+      "guidedLessonsDismissed": true,
+      "cameraClearance": "passed"
+    },
+    "tallFrame": {
+      "bottomStatisticsClearOfToolbar": true
+    },
+    "temporaryScreenshots": [
+      "/tmp/attractive-cover-final-wide.png",
+      "/tmp/attractive-cover-final-tall.png",
+      "/tmp/attractive-cover-final-full.png",
+      "/tmp/attractive-cover-final-lessons.png"
+    ],
+    "remainingChecks": [
+      "physical unfold/refold continuity",
+      "TalkBack"
+    ]
   }
 }
