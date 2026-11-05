@@ -1,0 +1,99 @@
+{
+  "results": [
+    {
+      "baseline": "reproduced native-button Space interception and exposed closed menu"
+    },
+    {
+      "width": 598,
+      "height": 530,
+      "checks": [
+        "hidden-menu-excluded",
+        "stats-readable-without-live-chatter",
+        "visual-fps-updates-preserved",
+        "canvas-playback-shortcut-preserved",
+        "space-preserves-native-button-activation",
+        "lessons-isolation-tab-escape-return",
+        "lesson-focus-not-repeated",
+        "equations-isolation-tab-escape-return",
+        "menu-isolation-tab-escape-return",
+        "menu-resize-focus-visible",
+        "desktop-resize-clears-isolation",
+        "compact-resize-restores-isolation",
+        "late-toolbar-focus-visible"
+      ]
+    },
+    {
+      "width": 372,
+      "height": 662,
+      "checks": [
+        "hidden-menu-excluded",
+        "stats-readable-without-live-chatter",
+        "canvas-playback-shortcut-preserved",
+        "space-preserves-native-button-activation",
+        "lessons-isolation-tab-escape-return",
+        "lesson-focus-not-repeated",
+        "equations-isolation-tab-escape-return",
+        "menu-isolation-tab-escape-return",
+        "menu-resize-focus-visible",
+        "desktop-resize-clears-isolation",
+        "compact-resize-restores-isolation",
+        "late-toolbar-focus-visible"
+      ]
+    },
+    {
+      "width": 360,
+      "height": 840,
+      "checks": [
+        "hidden-menu-excluded",
+        "stats-readable-without-live-chatter",
+        "canvas-playback-shortcut-preserved",
+        "space-preserves-native-button-activation",
+        "lessons-isolation-tab-escape-return",
+        "lesson-focus-not-repeated",
+        "equations-isolation-tab-escape-return",
+        "menu-isolation-tab-escape-return",
+        "menu-resize-focus-visible",
+        "desktop-resize-clears-isolation",
+        "compact-resize-restores-isolation",
+        "late-toolbar-focus-visible"
+      ]
+    },
+    {
+      "width": 1200,
+      "height": 900,
+      "checks": [
+        "sidebar-collapse-focus-exclusion",
+        "nonmodal-panels-preserved",
+        "about-modal-isolation-return"
+      ]
+    },
+    {
+      "reload": [
+        "prior-snapshot-not-clobbered",
+        "saved-instance-restores-lessons-scroll-focus",
+        "settings-playback-unchanged",
+        "native-one-shot",
+        "restored-tab-escape",
+        "closed-state-retained",
+        "early-bootstrap-queued",
+        "repeated-recreation",
+        "fresh-start-clears-stale",
+        "new-document-writers-enabled",
+        "hidden-focus-falls-back-to-close",
+        "malformed-storage-tolerated",
+        "ordered-panel-stack",
+        "menu-restored"
+      ]
+    },
+    {
+      "storage": "blocked reads/writes leave open/close/focus usable without page errors"
+    },
+    {
+      "storage": "write-only quota failure leaves open/close/focus usable without page errors"
+    }
+  ],
+  "talkBack": "Intentionally skipped at the user\u2019s request; browser checks only",
+  "date": "2026-11-05",
+  "sourceBaseline": "f70f7159876bff58fc122a1481a62af599827513",
+  "evidenceKind": "browser-only; native saved-state and physical results are separate"
+}

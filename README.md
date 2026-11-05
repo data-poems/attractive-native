@@ -62,6 +62,12 @@ produces unsigned release artifacts plus a debug-keystore **testing** APK.
 
 See [android/README.md](android/README.md).
 
+The local Flip candidate is 1.0.5 (6), with safe-window layout, compact keyboard
+controls and bounded panel restoration after native WebView recreation. Build,
+browser and native saved-state results, plus remaining physical checks, are in
+the [dated cover receipt](docs/flip-cover-accessibility-20261104.md). It has not
+been publicly released; iOS behavior is separate.
+
 ### Platforms suite
 
 Root [`platforms.yml`](platforms.yml) lists the Android track for the

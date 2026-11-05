@@ -13,6 +13,7 @@ import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.ApplicationInfo
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.Uri
 import android.os.Build
@@ -35,9 +36,13 @@ class MainActivity : Activity() {
     private lateinit var webView: WebView
     private lateinit var viewport: SafeViewport
     private var backCallback: OnBackInvokedCallback? = null
+    private var restoreNativeUiSession = false
+    private var uiSessionDocumentGeneration = 0
+    private var uiSessionBootstrapPendingGeneration: Int? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        restoreNativeUiSession = savedInstanceState != null
 
         webView = createWebView()
         viewport = SafeViewport(this).apply {
@@ -166,6 +171,39 @@ class MainActivity : Activity() {
     }
 
     private inner class AttractiveWebViewClient : WebViewClient() {
+        override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
+            super.onPageStarted(view, url, favicon)
+            uiSessionDocumentGeneration += 1
+            uiSessionBootstrapPendingGeneration = null
+        }
+
+        override fun onPageFinished(view: WebView, url: String) {
+            super.onPageFinished(view, url)
+            // Only our main asset owns this protocol; skip links may add a fragment.
+            val generation = uiSessionDocumentGeneration
+            if (uiSessionBootstrapPendingGeneration == generation ||
+                url.substringBefore('#') != START_URL ||
+                view.url?.substringBefore('#') != START_URL
+            ) return
+
+            uiSessionBootstrapPendingGeneration = generation
+            // DOM focus restored in JavaScript does not itself focus the new
+            // Android WebView after Activity recreation. Route keyboard input
+            // to it before replaying the document's focus projection.
+            if (!view.hasFocus()) view.requestFocus()
+            view.evaluateJavascript(
+                "typeof window.__restoreNativeUiSession === 'function' && " +
+                    "window.__restoreNativeUiSession($restoreNativeUiSession);",
+            ) { accepted ->
+                if (generation != uiSessionDocumentGeneration) return@evaluateJavascript
+                uiSessionBootstrapPendingGeneration = null
+                // A missing adapter does not consume the one-shot readiness gate.
+                // New documents bootstrap fresh after the first accepted restore;
+                // duplicate same-document calls are ignored by the JS guard.
+                if (accepted == "true") restoreNativeUiSession = false
+            }
+        }
+
         override fun shouldOverrideUrlLoading(
             view: WebView,
             request: WebResourceRequest,

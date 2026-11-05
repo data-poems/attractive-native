@@ -17,6 +17,106 @@ async function assertState(page, expression, message) {
   assert.ok(await page.evaluate(expression), message);
 }
 
+async function bootstrap(page, restore) {
+  assert.ok(await page.evaluate(restore => window.__restoreNativeUiSession(restore), restore));
+}
+
+async function openWithSpace(page, id) {
+  await page.locator('#' + id).focus();
+  await page.keyboard.press('Space');
+}
+
+async function checkUiSession(page, origin) {
+  const key = 'attractive-native-ui-session-v1';
+  await page.goto(origin + '/');
+  await bootstrap(page, false);
+  await openWithSpace(page, 'lessonsBtn');
+  await assertState(page, () => document.activeElement.id === 'lessonsCloseBtn');
+  const scrollTop = await page.locator('#lessonsBody').evaluate(element => {
+    element.scrollTop = 90;
+    return element.scrollTop;
+  });
+  assert.ok(scrollTop > 0, 'fixture has meaningful scrollable lesson content');
+  await page.waitForFunction(key => JSON.parse(localStorage.getItem(key)).scroll.lessons.top > 0, key);
+  const saved = await page.evaluate(key => localStorage.getItem(key), key);
+  await page.reload();
+  assert.equal(await page.locator('#lessonsPanel').getAttribute('aria-hidden'), 'true', 'reload reproduces lost transient pane before native bootstrap');
+  assert.equal(await page.evaluate(key => localStorage.getItem(key), key), saved, 'page setup cannot clobber the previous snapshot');
+  const settings = await page.evaluate(() => ['datasetSelect', 'attractorSelect', 'visualStyleSelect'].map(id => document.getElementById(id).value));
+  await page.evaluate(() => {
+    window.restoredCloseFocusCount = 0;
+    document.getElementById('lessonsCloseBtn').addEventListener('focus', () => window.restoredCloseFocusCount++);
+  });
+  await bootstrap(page, true);
+  await assertState(page, () => document.activeElement.id === 'lessonsCloseBtn' && document.getElementById('canvas').inert);
+  assert.equal(await page.locator('#lessonsBody').evaluate(element => element.scrollTop), scrollTop);
+  assert.equal(await page.evaluate(() => window.restoredCloseFocusCount), 1, 'one safe focus transfer after replay');
+  assert.deepEqual(await page.evaluate(() => ['datasetSelect', 'attractorSelect', 'visualStyleSelect'].map(id => document.getElementById(id).value)), settings, 'panel replay does not change settings');
+  assert.equal(await page.locator('#floatingPlayPauseBtn').getAttribute('aria-pressed'), 'true', 'panel replay does not toggle animation');
+  await bootstrap(page, false);
+  assert.equal(await page.locator('#lessonsPanel').getAttribute('aria-hidden'), 'false', 'duplicate native callback is ignored');
+  await page.keyboard.press('Shift+Tab');
+  await page.keyboard.press('Tab');
+  assert.equal(await page.evaluate(() => document.activeElement.id), 'lessonsCloseBtn', 'restored pane retains one working focus trap');
+  await page.keyboard.press('Escape');
+  await assertState(page, () => document.activeElement.id === 'lessonsBtn');
+  assert.deepEqual(await page.evaluate(key => JSON.parse(localStorage.getItem(key)).panels, key), [], 'closed state replaces old open state');
+  await page.reload();
+  await bootstrap(page, true);
+  assert.equal(await page.locator('#lessonsPanel').getAttribute('aria-hidden'), 'true', 'closed state survives recreation');
+
+  await openWithSpace(page, 'lessonsBtn');
+  await assertState(page, () => document.activeElement.id === 'lessonsCloseBtn');
+  await page.goto(origin + '/early-restore');
+  await assertState(page, () => document.activeElement.id === 'lessonsCloseBtn', 'early bootstrap waits for feature setup');
+  await page.reload();
+  await assertState(page, () => document.activeElement.id === 'lessonsCloseBtn', 'repeated recreation retains the pane');
+  await page.goto(origin + '/');
+  await bootstrap(page, false);
+  assert.equal(await page.locator('#lessonsPanel').getAttribute('aria-hidden'), 'true', 'fresh cold start does not reopen stale panes');
+  assert.deepEqual(await page.evaluate(key => JSON.parse(localStorage.getItem(key)).panels, key), [], 'fresh bootstrap enables writers for the new document');
+  await page.reload();
+  // Seed synthetic storage after pagehide has saved the departing live UI,
+  // before native bootstrap enables any writers in the new document.
+  await page.evaluate(key => localStorage.setItem(key, JSON.stringify({ version: 1, panels: ['lessonsPanel'], focus: 'datasetSelect' })), key);
+  await bootstrap(page, true);
+  await assertState(page, () => document.activeElement.id === 'lessonsCloseBtn', 'hidden background focus falls back to the restored Close control');
+  await page.keyboard.press('Escape');
+
+  for (const malformed of ['{', '{"version":99,"panels":["lessonsPanel"]}', '{"version":1,"panels":["unknown"]}']) {
+    await page.reload();
+    await page.evaluate(({ key, malformed }) => localStorage.setItem(key, malformed), { key, malformed });
+    await bootstrap(page, true);
+    assert.equal(await page.locator('#lessonsPanel').getAttribute('aria-hidden'), 'true', 'malformed or unsupported snapshot falls back to the live UI');
+  }
+
+  await page.setViewportSize({ width: 1200, height: 900 });
+  await openWithSpace(page, 'equationsBtn');
+  await openWithSpace(page, 'lessonsBtn');
+  await openWithSpace(page, 'infoBtn');
+  await assertState(page, () => document.activeElement.id === 'modalCloseBtn');
+  await page.setViewportSize({ width: 598, height: 530 });
+  await page.waitForFunction(key => JSON.parse(localStorage.getItem(key)).panels.join(',') === 'equationsPanel,lessonsPanel,modal', key);
+  await page.reload();
+  await bootstrap(page, true);
+  await assertState(page, () => document.activeElement.id === 'modalCloseBtn');
+  await page.keyboard.press('Escape');
+  await assertState(page, () => document.activeElement.id === 'lessonsCloseBtn');
+  await page.keyboard.press('Escape');
+  await assertState(page, () => document.activeElement.id === 'equationsCloseBtn');
+  await page.keyboard.press('Escape');
+  await assertState(page, () => document.activeElement.id === 'equationsBtn' && !document.getElementById('canvas').inert);
+
+  await openWithSpace(page, 'hamburgerBtn');
+  await assertState(page, () => document.activeElement.id === 'sidebarCloseBtn');
+  await page.reload();
+  await bootstrap(page, true);
+  await assertState(page, () => document.activeElement.id === 'sidebarCloseBtn');
+  await page.keyboard.press('Escape');
+  await assertState(page, () => document.activeElement.id === 'hamburgerBtn');
+  return { reload: ['prior-snapshot-not-clobbered', 'saved-instance-restores-lessons-scroll-focus', 'settings-playback-unchanged', 'native-one-shot', 'restored-tab-escape', 'closed-state-retained', 'early-bootstrap-queued', 'repeated-recreation', 'fresh-start-clears-stale', 'new-document-writers-enabled', 'hidden-focus-falls-back-to-close', 'malformed-storage-tolerated', 'ordered-panel-stack', 'menu-restored'] };
+}
+
 async function checkCompact(page, width, height) {
   const checks = [];
   await assertState(page, () => document.getElementById('sidebar').inert, 'closed menu is inert');
@@ -154,12 +254,13 @@ async function checkCompact(page, width, height) {
     const assets = path.join(staging, 'android/web');
     server = http.createServer((request, response) => {
       const url = new URL(request.url, 'http://localhost');
-      const file = path.resolve(assets, '.' + (url.pathname === '/' || url.pathname === '/baseline' ? '/index.html' : url.pathname));
+      const file = path.resolve(assets, '.' + (['/', '/baseline', '/early-restore'].includes(url.pathname) ? '/index.html' : url.pathname));
       if (!file.startsWith(assets + path.sep) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) { response.writeHead(404).end(); return; }
       const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' };
       response.setHeader('Content-Type', types[path.extname(file)] || 'application/octet-stream');
       let data = fs.readFileSync(file);
       if (url.pathname === '/baseline') data = Buffer.from(data.toString().replace(/<script src="accessibility\.js"><\/script>/, ''));
+      if (url.pathname === '/early-restore') data = Buffer.from(data.toString().replace('<script src="accessibility.js"></script>', '<script src="accessibility.js"></script><script>window.__restoreNativeUiSession(true);</script>'));
       response.end(data);
     });
     await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
@@ -187,6 +288,7 @@ async function checkCompact(page, width, height) {
         return route.abort();
       });
       await page.goto(origin + '/');
+      await bootstrap(page, false);
       results.push(await checkCompact(page, width, height));
       assert.deepEqual(errors, []);
       assert.deepEqual(external, []);
@@ -194,6 +296,7 @@ async function checkCompact(page, width, height) {
     }
     const desktop = await browser.newPage({ viewport: { width: 1200, height: 900 } });
     await desktop.goto(origin + '/');
+    await bootstrap(desktop, false);
     await assertState(desktop, () => !document.getElementById('sidebar').inert);
     await desktop.locator('#sidebarToggleBtn').click();
     await assertState(desktop, () => document.getElementById('sidebar').inert);
@@ -212,6 +315,46 @@ async function checkCompact(page, width, height) {
     await desktop.keyboard.press('Escape');
     await assertState(desktop, () => document.activeElement.id === 'infoBtn' && !document.getElementById('canvas').inert);
     results.push({ width: 1200, height: 900, checks: ['sidebar-collapse-focus-exclusion', 'nonmodal-panels-preserved', 'about-modal-isolation-return'] });
+    const session = await browser.newPage({ viewport: { width: 598, height: 530 } });
+    const sessionErrors = [];
+    session.on('pageerror', error => sessionErrors.push(error.message));
+    results.push(await checkUiSession(session, origin));
+    assert.deepEqual(sessionErrors, []);
+    await session.close();
+    const blocked = await browser.newPage({ viewport: { width: 598, height: 530 } });
+    const blockedErrors = [];
+    blocked.on('pageerror', error => blockedErrors.push(error.message));
+    await blocked.addInitScript(() => {
+      Object.defineProperty(window, 'localStorage', { get() { throw new DOMException('Synthetic blocked storage', 'SecurityError'); } });
+    });
+    await blocked.goto(origin + '/');
+    await bootstrap(blocked, true);
+    await openWithSpace(blocked, 'lessonsBtn');
+    await assertState(blocked, () => document.activeElement.id === 'lessonsCloseBtn');
+    await blocked.keyboard.press('Escape');
+    await assertState(blocked, () => document.activeElement.id === 'lessonsBtn');
+    assert.deepEqual(blockedErrors, []);
+    results.push({ storage: 'blocked reads/writes leave open/close/focus usable without page errors' });
+    await blocked.close();
+    const quota = await browser.newPage({ viewport: { width: 598, height: 530 } });
+    const quotaErrors = [];
+    quota.on('pageerror', error => quotaErrors.push(error.message));
+    await quota.addInitScript(() => {
+      const original = Storage.prototype.setItem;
+      Storage.prototype.setItem = function (key, value) {
+        if (key === 'attractive-native-ui-session-v1') throw new DOMException('Synthetic full storage', 'QuotaExceededError');
+        return original.call(this, key, value);
+      };
+    });
+    await quota.goto(origin + '/');
+    await bootstrap(quota, false);
+    await openWithSpace(quota, 'lessonsBtn');
+    await assertState(quota, () => document.activeElement.id === 'lessonsCloseBtn');
+    await quota.keyboard.press('Escape');
+    await assertState(quota, () => document.activeElement.id === 'lessonsBtn');
+    assert.deepEqual(quotaErrors, []);
+    results.push({ storage: 'write-only quota failure leaves open/close/focus usable without page errors' });
+    await quota.close();
     console.log(JSON.stringify({ results, talkBack: 'Intentionally skipped at the user’s request; browser checks only' }, null, 2));
   } finally {
     if (browser) await browser.close();

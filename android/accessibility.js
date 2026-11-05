@@ -2,6 +2,26 @@
 (function () {
   'use strict';
   var active = null;
+  var bootstrapRequested = false;
+  var restoreRequested = false;
+  var applyBootstrap = null;
+
+  function bootstrapWhenReady() {
+    if (bootstrapRequested && applyBootstrap && document.readyState === 'complete') applyBootstrap();
+  }
+
+  // Exposed synchronously for the native onPageFinished callback. An early call
+  // waits for all feature setup; repeated callbacks cannot clear/replay state.
+  window.__restoreNativeUiSession = function (restore) {
+    if (typeof restore !== 'boolean') return false;
+    if (!bootstrapRequested) {
+      bootstrapRequested = true;
+      restoreRequested = restore;
+      bootstrapWhenReady();
+    }
+    return true;
+  };
+  window.addEventListener('load', bootstrapWhenReady, { once: true });
 
   // Loaded before main.js: let control/target handlers and the native default
   // run, but keep its document-level animation shortcut out of controls.
@@ -36,6 +56,16 @@
     var order = [];
     var isolated = new Map();
     var initialized = false;
+    var sessionReady = false;
+    var replaying = false;
+    var sessionKey = 'attractive-native-ui-session-v1';
+    var scrollTargets = {
+      sidebar: document.getElementById('sidebar'),
+      equations: document.getElementById('equationsBody'),
+      lessons: document.getElementById('lessonsBody'),
+      about: document.querySelector('#modal .modal-content'),
+      toolbar: document.querySelector('.floating-controls')
+    };
 
     function setAttribute(element, name, value) {
       if (value === null) element.removeAttribute(name);
@@ -102,7 +132,7 @@
           }
         });
       }
-      if (initialized) {
+      if (initialized && !replaying) {
         if (active && (active !== previous || opened.indexOf(active) !== -1)) {
           focus(active.close);
         } else if (!active && previous && !previous.visible) {
@@ -120,7 +150,108 @@
         }
       }
       initialized = true;
+      saveUiSession();
     }
+
+    function sessionFocusTarget(id) {
+      var element = typeof id === 'string' && id.length <= 128 && document.getElementById(id);
+      if (!element || element.disabled || element.closest('[inert]') ||
+          !element.getClientRects().length || getComputedStyle(element).visibility === 'hidden') return null;
+      var inPane = panes.some(function (pane) { return pane.visible && pane.element.contains(element); });
+      if (!inPane && !element.closest('.floating-controls')) return null;
+      if (active && !active.element.contains(element)) return null;
+      return element.tabIndex >= 0 ? element : null;
+    }
+
+    function saveUiSession() {
+      if (!sessionReady || replaying) return;
+      var scroll = {};
+      Object.keys(scrollTargets).forEach(function (name) {
+        var element = scrollTargets[name];
+        if (element) scroll[name] = { top: element.scrollTop, left: element.scrollLeft };
+      });
+      var focused = document.activeElement;
+      var snapshot = {
+        version: 1,
+        panels: order.filter(function (pane) {
+          // The default desktop sidebar is not an explicitly opened cover menu.
+          return pane.element.id !== 'sidebar' || pane.element.classList.contains('open');
+        }).map(function (pane) { return pane.element.id; }),
+        scroll: scroll,
+        focus: focused && sessionFocusTarget(focused.id) ? focused.id : null
+      };
+      try { window.localStorage.setItem(sessionKey, JSON.stringify(snapshot)); }
+      catch (_) { /* Storage may be disabled or full; the live UI still works. */ }
+    }
+
+    function readUiSession() {
+      try {
+        var raw = window.localStorage.getItem(sessionKey);
+        if (!raw || raw.length > 4096) return null;
+        var snapshot = JSON.parse(raw);
+        if (!snapshot || snapshot.version !== 1 || !Array.isArray(snapshot.panels) ||
+            snapshot.panels.length > panes.length ||
+            new Set(snapshot.panels).size !== snapshot.panels.length ||
+            !snapshot.panels.every(function (id) {
+              return panes.some(function (pane) { return pane.element.id === id; });
+            })) return null;
+        return snapshot;
+      } catch (_) { return null; }
+    }
+
+    function restoreScroll(snapshot) {
+      if (!snapshot.scroll || typeof snapshot.scroll !== 'object') return;
+      Object.keys(scrollTargets).forEach(function (name) {
+        var element = scrollTargets[name];
+        var position = snapshot.scroll[name];
+        if (!element || !position) return;
+        ['top', 'left'].forEach(function (axis) {
+          var value = position[axis];
+          if (typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 1000000) {
+            element[axis === 'top' ? 'scrollTop' : 'scrollLeft'] = value;
+          }
+        });
+      });
+    }
+
+    applyBootstrap = function () {
+      if (sessionReady) return;
+      var snapshot = restoreRequested ? readUiSession() : null;
+      replaying = true;
+      if (!restoreRequested) {
+        try { window.localStorage.removeItem(sessionKey); } catch (_) { /* Optional storage. */ }
+      }
+      if (snapshot) {
+        snapshot.panels.forEach(function (id) {
+          var pane = panes.find(function (entry) { return entry.element.id === id; });
+          var alreadyOpen = pane && (id === 'sidebar'
+            ? pane.element.classList.contains('open') : visible(pane));
+          if (pane && pane.trigger && !alreadyOpen) {
+            pane.trigger.click();
+            sync(false);
+          }
+        });
+        order = order.filter(function (pane) { return snapshot.panels.indexOf(pane.element.id) === -1; })
+          .concat(snapshot.panels.map(function (id) {
+            return panes.find(function (pane) { return pane.element.id === id; });
+          }));
+      }
+      sync(false);
+      if (snapshot) {
+        restoreScroll(snapshot);
+        var target = sessionFocusTarget(snapshot.focus);
+        if (target) focus(target);
+        else if (active) focus(active.close);
+        else if (snapshot.panels.length) {
+          var last = panes.find(function (pane) { return pane.element.id === snapshot.panels[snapshot.panels.length - 1]; });
+          if (last && last.visible) focus(compact.matches || last.element.id !== 'sidebar'
+            ? last.close : document.getElementById('sidebarToggleBtn'));
+        }
+      }
+      replaying = false;
+      sessionReady = true;
+      saveUiSession();
+    };
 
     function tabbable(pane) {
       return Array.from(pane.element.querySelectorAll('button,a[href],input,select,textarea,[tabindex]'))
@@ -157,7 +288,11 @@
     var observer = new MutationObserver(function () { sync(false); });
     panes.forEach(function (pane) { observer.observe(pane.element, { attributes: true, attributeFilter: ['class'] }); });
     compact.addEventListener('change', function () { sync(true); });
+    document.addEventListener('focusin', saveUiSession);
+    document.addEventListener('scroll', saveUiSession, true);
+    window.addEventListener('pagehide', saveUiSession);
     sync(false);
+    bootstrapWhenReady();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setup);

@@ -97,3 +97,68 @@ The behavior follows the W3C [modal dialog pattern](https://www.w3.org/WAI/ARIA/
 and HTML's [inert subtree semantics](https://html.spec.whatwg.org/multipage/interaction.html#inert-subtrees).
 Rollback removes the adapter and its preparation hook; no data migration or
 uninstall is needed.
+
+## November 5: transient panel recreation fix
+
+The coordinating session observed the open Lessons browser disappear when the
+cover host resumed the app. Samsung's scoped ActivityThread log explicitly
+reported `relaunchActivityIfWebViewAttached` / `has WebView, Relaunching` at
+01:39:38, in the same process and task. This was an observed native recreation,
+not an established density-change cause.
+
+Against source baseline `f70f7159876bff58fc122a1481a62af599827513`, the Android
+adapter now exposes `window.__restoreNativeUiSession(boolean)` synchronously,
+queuing early calls until feature setup finishes. The native client invokes it
+only for the owned main asset, with saved-instance restoration true until the
+first accepted current-document callback. Later documents bootstrap fresh;
+duplicate calls are ignored per document, and a generation guard rejects stale
+native callbacks. A saved instance is not necessarily a physical fold.
+This single app-storage projection does not provide independent multiwindow
+session restoration.
+
+One versioned localStorage snapshot records open panel IDs/order, bounded scroll
+positions and a stable focus ID. Writes start only after native bootstrap and
+pause during replay. Fresh starts discard stale projections; recreation uses
+the existing control handlers before restoring isolation and visible focus.
+Closed state is saved too. Malformed, unavailable or full storage leaves the
+live UI usable. No native JavaScript interface or permission was added.
+
+This restores the menu, Equations, About/help and Lessons **panel/browser
+projection**. It does not serialize engine state, settings, rendered DOM or an
+in-progress lesson's selected step. Lesson-step handlers are not replayed, so
+restoration does not apply their presets or duplicate their announcements.
+Existing lesson interaction and explicit announcements remain unchanged.
+
+The expanded real-preparation browser runner checks reload restoration, scroll
+and safe focus, ordered overlays, closed-state persistence, one-shot/early
+bootstrap, fresh-document writers, invalid focus, malformed/blocked/full
+storage, and the earlier four-size keyboard regressions. Its local output is
+`/tmp/attractive-ui-session-browser-20261105.log`. These are browser checks;
+native build and actual recreation acceptance for this fix belong to the
+coordinating session. Reverting this section's source
+change removes the native bootstrap and adapter snapshot behavior; existing
+lesson completion/settings storage keys are untouched.
+
+### Signed candidate and native keyboard correction
+
+The installed candidate is **1.0.5 (6)**. APK SHA-256:
+`4863c0e25df5640b63f66bfef19a955388c788e21c6d699c563b6de2b04c72ad`;
+existing certificate SHA-256 remains
+`e11e2688c8f306726d3a453bd0ced55da6a05a91ccb94b98b790a93420de45c1`.
+All 13 JVM tests, lint and signed release build passed. The
+[expanded browser receipt](reviews/native-ui-session-browser-20261105.json)
+is browser-only: restoration scenarios use 598×530 with desktop/compact overlay
+coverage, alongside the earlier four-size keyboard checks.
+
+Intermediate build 5 restored Lessons on a native saved-state restart, but Escape
+was ignored until touching the content. DOM focus had not focused the new native
+WebView. The owned-page callback now requests native view focus only when absent,
+before replaying DOM focus. Astra found no blocker in that bounded correction.
+
+On the actual CLOSED0 Flip, build 6 restored Lessons after background saved-state
+process restart 26328 → 26805. Escape then dismissed it **without any touch first**,
+and restart 26805 → 27110 kept it closed. Settings/playback remained unchanged; the
+lesson browser was freshly reopened for the physical check. These tests kill
+only the background test app after its state is saved, preserve app data and
+do not establish a physical fold. New-build physical unfold/refold is pending.
+No public APK or store release was made; TalkBack stayed off.
