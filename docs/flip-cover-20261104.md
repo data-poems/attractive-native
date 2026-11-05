@@ -123,6 +123,12 @@ build checkout. This change preserves those inputs; it does not establish a new
 canonical web-source revision. A fresh build still needs that separately
 provisioned sidecar and vendored dependencies as documented in `android/README.md`.
 
+Durable evidence is retained in the [coordinating handoff](https://github.com/ambient-time/clocks-app/blob/7466a6dd8fbb0cdaef20292289b22f82bf8f655f/docs/reviews/flip-apps-20261104.md)
+and [final full-frame Lessons screenshot](https://github.com/ambient-time/clocks-app/blob/7466a6dd8fbb0cdaef20292289b22f82bf8f655f/docs/reviews/assets/flip-apps-20261104/attractive-full-lessons.png).
+The `/tmp` paths above are transient local captures. The equivalent viewport in
+`lukeslp/hexsweeper-app` is maintained separately; review changes to measurement
+order, inset clearing and origin updates in both shells.
+
 ## Remaining physical check and rollback
 
 Physical unfold/refold continuity and TalkBack remain to check with the installed

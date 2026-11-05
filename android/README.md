@@ -22,6 +22,14 @@ This is the same pattern as Cube / Jankify — not Capacitor.
 
 `preBuild` runs the prepare script automatically.
 
+## Flip cover testing — November 4, 2026
+
+The local 1.0.2 (3) candidate adds a native safe viewport, a scrolling toolbar
+and reachable panel controls. The signed final build passed actual closed-cover
+launch and wide/tall/full resizing. Physical fold continuity and TalkBack remain
+unverified. See the [dated build and device evidence](../docs/flip-cover-20261104.md);
+this candidate has not been publicly released.
+
 ## Build
 
 ```bash
