@@ -83,6 +83,16 @@ Other WebView versions and screen-reader acceptance remain unverified. No
 permissions, network policy, math or saved-data schema changed. The coordinating
 session owns final cross-repository receipts and remaining physical fold checks.
 
+On November 5, the app resumed normally on the actual inner screen. Lessons was
+closed after intervening phone use and could be opened normally. The fresh
+panel is prepared for a controlled return-to-cover check, pending an actual
+CLOSED posture. This is not evidence that folding itself lost the panel.
+The [inner-screen follow-up](https://github.com/ambient-time/clocks-app/blob/b1038d7bbc162ada910fa5d61ba0f3ac13132970/docs/reviews/flip-quiet-checks-20261104.md)
+retains the screenshot and exact boundaries. Astra noted that this manifest
+does not handle density and that WebView saved history is not live DOM/panel
+restoration. Establish a configuration/relaunch cause before changing either
+the manifest or persistence. No new runtime build was made for this observation.
+
 The behavior follows the W3C [modal dialog pattern](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/)
 and HTML's [inert subtree semantics](https://html.spec.whatwg.org/multipage/interaction.html#inert-subtrees).
 Rollback removes the adapter and its preparation hook; no data migration or
