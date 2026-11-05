@@ -1,8 +1,13 @@
 # Android cover keyboard and focus — November 4, 2026
 
-Status: source, quiet browser checks, signed release checks and selected quiet
-keyboard journeys in the actual closed-cover Android WebView passed. Version
-1.0.3 (4) is installed in place. Actual TalkBack acceptance was intentionally
+Current workstream checkpoint, November 5: private signed **1.0.5 (6)** was
+installed and passed native saved-state restoration and immediate no-touch
+Escape. See [the latest artifact and focus correction](#signed-candidate-and-native-keyboard-correction).
+Final physical unfold/refold is still pending; this is not a public release.
+
+Historical November 4 status: source, quiet browser checks, signed release checks
+and selected quiet keyboard journeys in the actual closed-cover Android WebView
+passed. Version 1.0.3 (4) was installed at that checkpoint. Actual TalkBack acceptance was intentionally
 skipped at Luke's request; it did not pass. Physical fold continuity for this
 artifact remains pending. The earlier signed cover artifact's evidence remains
 separate.
@@ -141,7 +146,7 @@ lesson completion/settings storage keys are untouched.
 
 ### Signed candidate and native keyboard correction
 
-The installed candidate is **1.0.5 (6)**. APK SHA-256:
+The candidate installed and tested at this November 5 checkpoint is **1.0.5 (6)**. APK SHA-256:
 `4863c0e25df5640b63f66bfef19a955388c788e21c6d699c563b6de2b04c72ad`;
 existing certificate SHA-256 remains
 `e11e2688c8f306726d3a453bd0ced55da6a05a91ccb94b98b790a93420de45c1`.

@@ -22,7 +22,16 @@ This is the same pattern as Cube / Jankify — not Capacitor.
 
 `preBuild` runs the prepare script automatically.
 
-## Flip cover testing — November 4, 2026
+## Current Flip checkpoint — November 5, 2026
+
+Private signed **1.0.5 (6)** is the latest artifact tested by this workstream.
+Its [restoration/focus receipt](../docs/flip-cover-accessibility-20261104.md#signed-candidate-and-native-keyboard-correction)
+records the exact APK, native saved-state restart, restored Lessons browser and
+Escape without a prior touch. Final physical unfold/refold remains pending;
+TalkBack was skipped. Versioning comes from `version.properties`. This checkpoint
+is not a public Android release. Recheck installed identity before further tests.
+
+## Historical cover geometry checkpoint — November 4, 2026
 
 The local 1.0.2 (3) candidate adds a native safe viewport, a scrolling toolbar
 and reachable panel controls. The signed final build passed actual closed-cover

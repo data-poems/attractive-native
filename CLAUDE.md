@@ -38,7 +38,7 @@ Prefer the `XcodeBuildMCP` tools over raw `xcodebuild` shell calls when
 available (build_run_sim, test_sim, etc.) — call `session_show_defaults`
 first each session to confirm project/scheme/simulator.
 
-## Versioning — single source of truth
+## Apple versioning — single source of truth
 
 `project.yml` (`settings.base.MARKETING_VERSION` / `CURRENT_PROJECT_VERSION`)
 is the *only* place app/build version should be set. Both the `Attractive`
@@ -48,6 +48,20 @@ extension's `CFBundleShortVersionString` to match its containing app —
 bumping the version in Xcode's target editor (or via `agvtool` on just one
 target) desyncs the two and produces a build warning/failure. Always bump
 the version in `project.yml`, then run `xcodegen generate`.
+
+## Android shell and version ownership
+
+Android uses the offline WebView shell described in [android/README.md](android/README.md).
+Its version source is `android/version.properties`; `project.yml` above owns
+Apple targets only. `scripts/prepare-android-web.sh` prepares the local web
+sidecar into generated `android/web`, including the authored adapter
+`android/accessibility.js`. Do not hand-edit generated web output.
+
+The November 5 private Flip checkpoint is 1.0.5 (6), source `45e4b15`.
+The [dated restoration and focus record](docs/flip-cover-accessibility-20261104.md#signed-candidate-and-native-keyboard-correction)
+records saved-state restart and no-touch Escape evidence. A final physical
+unfold/refold on that build remains pending; it is not a public release or a
+TalkBack acceptance claim.
 
 ## Architecture
 
