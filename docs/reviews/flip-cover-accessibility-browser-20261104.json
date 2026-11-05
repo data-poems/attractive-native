@@ -1,0 +1,77 @@
+{
+  "date": "2026-11-04",
+  "sourceBaseline": "1a57f1357b4e01871a9080a681f3bdb28e76fdec",
+  "engine": "Playwright with installed Chrome, headless",
+  "assetPreparation": "real prepare script in a temporary tree; repository android/web unchanged",
+  "evidence": "browser keyboard and DOM only; no APK build/install or device operation",
+  "results": [
+    {
+      "baseline": "reproduced native-button Space interception and exposed closed menu"
+    },
+    {
+      "width": 598,
+      "height": 530,
+      "checks": [
+        "hidden-menu-excluded",
+        "stats-readable-without-live-chatter",
+        "visual-fps-updates-preserved",
+        "canvas-playback-shortcut-preserved",
+        "space-preserves-native-button-activation",
+        "lessons-isolation-tab-escape-return",
+        "lesson-focus-not-repeated",
+        "equations-isolation-tab-escape-return",
+        "menu-isolation-tab-escape-return",
+        "menu-resize-focus-visible",
+        "desktop-resize-clears-isolation",
+        "compact-resize-restores-isolation",
+        "late-toolbar-focus-visible"
+      ]
+    },
+    {
+      "width": 372,
+      "height": 662,
+      "checks": [
+        "hidden-menu-excluded",
+        "stats-readable-without-live-chatter",
+        "canvas-playback-shortcut-preserved",
+        "space-preserves-native-button-activation",
+        "lessons-isolation-tab-escape-return",
+        "lesson-focus-not-repeated",
+        "equations-isolation-tab-escape-return",
+        "menu-isolation-tab-escape-return",
+        "menu-resize-focus-visible",
+        "desktop-resize-clears-isolation",
+        "compact-resize-restores-isolation",
+        "late-toolbar-focus-visible"
+      ]
+    },
+    {
+      "width": 360,
+      "height": 840,
+      "checks": [
+        "hidden-menu-excluded",
+        "stats-readable-without-live-chatter",
+        "canvas-playback-shortcut-preserved",
+        "space-preserves-native-button-activation",
+        "lessons-isolation-tab-escape-return",
+        "lesson-focus-not-repeated",
+        "equations-isolation-tab-escape-return",
+        "menu-isolation-tab-escape-return",
+        "menu-resize-focus-visible",
+        "desktop-resize-clears-isolation",
+        "compact-resize-restores-isolation",
+        "late-toolbar-focus-visible"
+      ]
+    },
+    {
+      "width": 1200,
+      "height": 900,
+      "checks": [
+        "sidebar-collapse-focus-exclusion",
+        "nonmodal-panels-preserved",
+        "about-modal-isolation-return"
+      ]
+    }
+  ],
+  "talkBack": "Intentionally skipped at the user\u2019s request; browser checks only"
+}

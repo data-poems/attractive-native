@@ -32,6 +32,7 @@ do
 done
 cp -R "${SRC}/vendor" "${OUT}/vendor"
 cp "${ROOT}/android/compact-window.css" "${OUT}/compact-window.css"
+cp "${ROOT}/android/accessibility.js" "${OUT}/accessibility.js"
 
 OUT="${OUT}" python3 - <<'PY'
 from pathlib import Path
@@ -41,6 +42,12 @@ out = Path(os.environ["OUT"])
 html_path = out / "index.html"
 html = html_path.read_text(encoding="utf-8")
 html = html.replace('</head>', '  <link rel="stylesheet" href="compact-window.css">\n</head>')
+# Register the adapter's bubbling Space guard before main.js registers its
+# global shortcut. This preserves target key handlers and native activation.
+main_script = '<script src="main.js"></script>'
+if html.count(main_script) != 1:
+    raise SystemExit("Expected exactly one main.js script for accessibility adapter")
+html = html.replace(main_script, '<script src="accessibility.js"></script>\n  ' + main_script)
 
 # Drop remote font preconnect/stylesheet — use system fonts offline.
 html = re.sub(
