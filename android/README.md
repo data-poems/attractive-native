@@ -76,3 +76,10 @@ release artifacts plus a debug-keystore **testing** APK for sideload.
 - `blockNetworkLoads = true`
 - External http(s) links open in the system browser only on user gesture
 - No cleartext traffic; no backup of private files
+
+## Automated emulator follow-up
+
+The [guarded native restoration suite](../docs/native-restoration-emulator-20261105.md)
+now exercises real Activity recreation, native Escape without a prior touch,
+closed-state persistence and later-document writers using only synthetic emulator
+data. It does not close the physical fold or signed-release acceptance gates.

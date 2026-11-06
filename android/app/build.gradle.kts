@@ -48,7 +48,7 @@ android {
         targetSdk = 36
         versionCode = attractiveVersionCode
         versionName = attractiveVersionName
-        testInstrumentationRunner = "android.test.InstrumentationTestRunner"
+        testInstrumentationRunner = "attractive.lukesteuber.android.NativeUiRestorationRunner"
     }
 
     sourceSets {

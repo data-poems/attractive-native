@@ -1,0 +1,319 @@
+{
+  "native": {
+    "observations": [
+      {
+        "step": "prepared",
+        "state": {
+          "focus": "lessonsCloseBtn",
+          "open": true,
+          "scroll": 120,
+          "stored": {
+            "focus": "lessonsCloseBtn",
+            "panels": [
+              "lessonsPanel"
+            ],
+            "scroll": {
+              "about": {
+                "left": 0,
+                "top": 0
+              },
+              "equations": {
+                "left": 0,
+                "top": 0
+              },
+              "lessons": {
+                "left": 0,
+                "top": 120
+              },
+              "sidebar": {
+                "left": 0,
+                "top": 0
+              },
+              "toolbar": {
+                "left": 0,
+                "top": 0
+              }
+            },
+            "version": 1
+          },
+          "tab": "lessons",
+          "timeOrigin": 1793930650629.1,
+          "url": "file:///android_asset/index.html",
+          "viewport": {
+            "dpr": 2.5,
+            "height": 317,
+            "width": 379
+          }
+        },
+        "nativeWebFocus": true
+      },
+      {
+        "step": "recreated-open",
+        "state": {
+          "focus": "lessonsCloseBtn",
+          "open": true,
+          "scroll": 120,
+          "stored": {
+            "focus": "lessonsCloseBtn",
+            "panels": [
+              "lessonsPanel"
+            ],
+            "scroll": {
+              "about": {
+                "left": 0,
+                "top": 0
+              },
+              "equations": {
+                "left": 0,
+                "top": 0
+              },
+              "lessons": {
+                "left": 0,
+                "top": 120
+              },
+              "sidebar": {
+                "left": 0,
+                "top": 0
+              },
+              "toolbar": {
+                "left": 0,
+                "top": 0
+              }
+            },
+            "version": 1
+          },
+          "tab": "lessons",
+          "timeOrigin": 1793930652405.3,
+          "url": "file:///android_asset/index.html",
+          "viewport": {
+            "dpr": 2.5,
+            "height": 317,
+            "width": 379
+          }
+        },
+        "nativeWebFocus": true
+      },
+      {
+        "step": "native-escape",
+        "state": {
+          "focus": "lessonsBtn",
+          "open": false,
+          "scroll": 120,
+          "stored": {
+            "focus": "lessonsBtn",
+            "panels": [],
+            "scroll": {
+              "about": {
+                "left": 0,
+                "top": 0
+              },
+              "equations": {
+                "left": 0,
+                "top": 0
+              },
+              "lessons": {
+                "left": 0,
+                "top": 120
+              },
+              "sidebar": {
+                "left": 0,
+                "top": 0
+              },
+              "toolbar": {
+                "left": 274,
+                "top": 0
+              }
+            },
+            "version": 1
+          },
+          "tab": "lessons",
+          "timeOrigin": 1793930652405.3,
+          "url": "file:///android_asset/index.html",
+          "viewport": {
+            "dpr": 2.5,
+            "height": 317,
+            "width": 379
+          }
+        },
+        "nativeWebFocus": true
+      },
+      {
+        "step": "recreated-closed",
+        "state": {
+          "focus": "lessonsBtn",
+          "open": false,
+          "scroll": 0,
+          "stored": {
+            "focus": "lessonsBtn",
+            "panels": [],
+            "scroll": {
+              "about": {
+                "left": 0,
+                "top": 0
+              },
+              "equations": {
+                "left": 0,
+                "top": 0
+              },
+              "lessons": {
+                "left": 0,
+                "top": 0
+              },
+              "sidebar": {
+                "left": 0,
+                "top": 0
+              },
+              "toolbar": {
+                "left": 274,
+                "top": 0
+              }
+            },
+            "version": 1
+          },
+          "tab": "lessons",
+          "timeOrigin": 1793930652895.8,
+          "url": "file:///android_asset/index.html",
+          "viewport": {
+            "dpr": 2.5,
+            "height": 317,
+            "width": 379
+          }
+        },
+        "nativeWebFocus": true
+      },
+      {
+        "step": "later-document-prepared",
+        "state": {
+          "focus": "lessonsCloseBtn",
+          "open": true,
+          "scroll": 120,
+          "stored": {
+            "focus": "lessonsCloseBtn",
+            "panels": [
+              "lessonsPanel"
+            ],
+            "scroll": {
+              "about": {
+                "left": 0,
+                "top": 0
+              },
+              "equations": {
+                "left": 0,
+                "top": 0
+              },
+              "lessons": {
+                "left": 0,
+                "top": 120
+              },
+              "sidebar": {
+                "left": 0,
+                "top": 0
+              },
+              "toolbar": {
+                "left": 0,
+                "top": 0
+              }
+            },
+            "version": 1
+          },
+          "tab": "lessons",
+          "timeOrigin": 1793930653061.6,
+          "url": "file:///android_asset/index.html",
+          "viewport": {
+            "dpr": 2.5,
+            "height": 317,
+            "width": 379
+          }
+        },
+        "nativeWebFocus": true
+      },
+      {
+        "step": "later-document-restored-then-escaped",
+        "state": {
+          "focus": "lessonsBtn",
+          "open": false,
+          "scroll": 120,
+          "stored": {
+            "focus": "lessonsBtn",
+            "panels": [],
+            "scroll": {
+              "about": {
+                "left": 0,
+                "top": 0
+              },
+              "equations": {
+                "left": 0,
+                "top": 0
+              },
+              "lessons": {
+                "left": 0,
+                "top": 120
+              },
+              "sidebar": {
+                "left": 0,
+                "top": 0
+              },
+              "toolbar": {
+                "left": 274,
+                "top": 0
+              }
+            },
+            "version": 1
+          },
+          "tab": "lessons",
+          "timeOrigin": 1793930653435.1,
+          "url": "file:///android_asset/index.html",
+          "viewport": {
+            "dpr": 2.5,
+            "height": 317,
+            "width": 379
+          }
+        },
+        "nativeWebFocus": true
+      }
+    ],
+    "activityRecreations": 3,
+    "nativeEscapeWithoutTouch": 2,
+    "productionNetworkPermission": false,
+    "model": "sdk_gphone64_arm64",
+    "api": 36,
+    "limits": "Activity.recreate in one emulator process; not process death, physical folding, TalkBack or a signed release build. DOM setup uses existing click/focus handlers; native keys traverse the actual Android View."
+  },
+  "avd": "NativeUi_Restore_20261105",
+  "serial": "emulator-5590",
+  "appPackage": "attractive.lukesteuber.android.debug",
+  "versionCode": "6",
+  "versionName": "1.0.5-debug",
+  "appApkSha256": "c09545c5fa8937c10943ed684d09e226b146f83a20bf53dddd952196fa7227d4",
+  "testApkSha256": "25cb89fd5e726f1ba8b935d58379fe5b0c0de19f81707b665c44edeb4f292a2f",
+  "sourceBaseHead": "80ac3275aa0d4349f7a0c9fe695a4b253db0b810",
+  "testSourceSha256": {
+    "android/app/src/androidTest/java/attractive/lukesteuber/android/NativeUiRestorationChecks.java": "3eedfe67e0054282559a1743a5696877c7e50d484bd78598ad7fe91b8d835ea5",
+    "android/app/src/androidTest/java/attractive/lukesteuber/android/NativeUiRestorationRunner.java": "cde33d7861f32b719f40809c6a62194a50a73a042eab17063574075c15767feb"
+  },
+  "driverSha256": "ac8db94dfb0c2c9cc9bb0320effaf4efa93d1179af72a82e4749c36fb039578e",
+  "appData": "Only synthetic target package reset on a dedicated emulator",
+  "immersiveOnboarding": "Acknowledged before run, never during restoration",
+  "displaySize": "Physical size: 1080x2400\nOverride size: 948x839",
+  "displayDensity": "Physical density: 420\nOverride density: 400",
+  "limits": "Debug artifact; not installed signed-phone candidate, process death, OEM display transfer or physical folding",
+  "recorded": "2026-11-05",
+  "verification": {
+    "debugAndTestBuild": "passed",
+    "jvmTests": 13,
+    "lintErrors": 0,
+    "lintWarnings": 0,
+    "physicalSerialRefusal": "Observed parser rejection before ADB; no evidence directory created",
+    "missingNativeOptInRefusal": "Observed AssertionError before Activity start; intended negative test",
+    "productionRuntimeChanges": false,
+    "generatedPayloadChanges": false,
+    "newDependencies": false,
+    "testRunner": "Platform Instrumentation in test APK"
+  },
+  "runtimeSourceSha256": {
+    "android/app/src/main/java/attractive/lukesteuber/android/MainActivity.kt": "810a1ce602a0e87536b97a259954db3d1d084f8e608c77599e8b3f076f96621c"
+  },
+  "payloadTreeSha256": "4db3b78db8de59eeca136b35d53e052ba8c397d1e9087ac9b446ba5cca4ae345",
+  "payloadFileCount": 35,
+  "scope": "Same runtime source as candidate6/34, locally built debug artifacts. New test sources were uncommitted when executed; exact test-source digests above bind the compiled test APK. No signed release artifact or physical device acceptance."
+}
