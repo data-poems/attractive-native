@@ -3,7 +3,10 @@
 Current workstream checkpoint, November 5: private signed **1.0.5 (6)** was
 installed and passed native saved-state restoration and immediate no-touch
 Escape. See [the latest artifact and focus correction](#signed-candidate-and-native-keyboard-correction).
-Final physical unfold/refold is still pending; this is not a public release.
+Later November5 physical result: fresh inner Lessons survived actual refold and
+closed-cover resume, and native Escape dismissed it before content touch. See the
+[quiet physical return](https://github.com/ambient-time/clocks-app/blob/codex/flip-apps-20261104/docs/reviews/flip-quiet-return-20261105.md). This passes that bounded panel/focus journey, not uninterrupted
+foreground transfer, selected-lesson/engine serialization or TalkBack. No public release.
 
 Historical November 4 status: source, quiet browser checks, signed release checks
 and selected quiet keyboard journeys in the actual closed-cover Android WebView

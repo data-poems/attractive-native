@@ -59,9 +59,10 @@ sidecar into generated `android/web`, including the authored adapter
 
 The November 5 private Flip checkpoint is 1.0.5 (6), source `45e4b15`.
 The [dated restoration and focus record](docs/flip-cover-accessibility-20261104.md#signed-candidate-and-native-keyboard-correction)
-records saved-state restart and no-touch Escape evidence. A final physical
-unfold/refold on that build remains pending; it is not a public release or a
-TalkBack acceptance claim.
+records saved-state restart and no-touch Escape evidence. The later
+[quiet physical return](https://github.com/ambient-time/clocks-app/blob/codex/flip-apps-20261104/docs/reviews/flip-quiet-return-20261105.md) observes fresh inner Lessons retained on actual refold/cover resume and
+native Escape before touch. This is bounded panel/focus evidence, not engine
+serialization, uninterrupted foreground transfer, public release or TalkBack.
 
 ## Architecture
 
