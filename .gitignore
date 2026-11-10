@@ -19,7 +19,7 @@ Package.resolved
 .idea/
 .vscode/
 
-# Claude Code runtime artifacts
+# Local tool runtime artifacts
 .claude/
 .playwright-mcp/
 fastlane/report.xml

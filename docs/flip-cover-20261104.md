@@ -111,7 +111,7 @@ dismissed the panel on the physical cover. Camera clearance was correct, and
 the tall-frame bottom statistics did not overlap the toolbar. These are recorded
 cover input coordinates, not CSS-pixel or Android-dp measurements.
 
-Final screenshots are temporarily stored on Napoleon at
+Final screenshots are temporarily stored on the build machine at
 `/tmp/attractive-cover-final-wide.png`, `/tmp/attractive-cover-final-tall.png`,
 `/tmp/attractive-cover-final-full.png` and
 `/tmp/attractive-cover-final-lessons.png`. The build receipt records this final
