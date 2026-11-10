@@ -116,7 +116,7 @@ No secret is stored in this repository. Locations only:
 |------|-------|
 | iOS build | `xcodegen generate`, then `xcodebuild` (see Build & test) |
 | iOS release | Lanes in `fastlane/Fastfile`; App Store Connect API key under `~/.appstoreconnect/` on the release machine (`source ~/.appstoreconnect/env.sh` first) |
-| Android build | `cd android && ./gradlew test assembleDebug` (JDK 21). Needs the gitignored `attractive-web/` sidecar next to `android/`, with its `vendor/` libraries; it is not in this repository and a fresh clone cannot build Android without it |
+| Android build | `cd android && ./gradlew test assembleDebug` (JDK 21). Needs the gitignored `attractive-web/` sidecar next to `android/`: a checkout of `lukeslp/attractive-web` (branch `master`) with `vendor/` filled by `scripts/vendor-web-libs.sh`. It is not in this repository and a fresh clone cannot build Android without it; steps are in the README |
 | Android release | `android/scripts/stage-release.sh`, run through `android-release-toolkit` with `scripts/android-release with-signing --profile attractive`; Play materials in `play/` |
 | Android signing key | The `attractive` profile of `android-release-toolkit`: keystore under `~/Library/Application Support/AndroidReleaseToolkit/keystores/` on the release machine, password in the login Keychain |
 | Store accounts | Apple Developer and App Store Connect; Google Play Console (closed-testing checklist in `play/`) |

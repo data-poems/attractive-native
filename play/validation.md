@@ -20,10 +20,12 @@ Command:
 
 ```sh
 env JAVA_HOME=/Library/Java/JavaVirtualMachines/temurin-21.jdk/Contents/Home \
-  /Users/luke/workspace/android-release-toolkit/scripts/android-release \
+  "$ANDROID_RELEASE_TOOLKIT"/scripts/android-release \
   with-signing --profile attractive -- \
   ./android/gradlew -p android clean test lintRelease assembleRelease bundleRelease
 ```
+
+`ANDROID_RELEASE_TOOLKIT` is the checkout of the separate release-signing wrapper on the release machine; it supplies the `ATTRACTIVE_STORE_*` signing variables to the wrapped command.
 
 Result: Gradle build successful, including unit tests and release lint.
 

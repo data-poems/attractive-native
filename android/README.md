@@ -10,12 +10,20 @@ This is the same pattern as Cube / Jankify — not Capacitor.
 
 - JDK 21
 - Android SDK Platform 36 + Build-Tools 36
-- Local `../attractive-web` tree (sidecar; may be gitignored) with vendored libs under `attractive-web/vendor/`
+- Local `../attractive-web` tree (ignored by Git) with vendored libraries under `attractive-web/vendor/`
 
 ## Prepare offline web assets
 
+`attractive-web` is a checkout of the separate `lukeslp/attractive-web`
+repository (branch `master`). The [root README](../README.md#build-the-android-app)
+explains how to obtain it and why the public `data-poems/attractive` repository
+is not a drop-in replacement.
+
 ```bash
-# Once: vendor three / rough / katex into attractive-web/vendor/ (already done on this machine)
+# Once, from the repository root: get the web app and its libraries
+git clone https://github.com/lukeslp/attractive-web.git attractive-web
+scripts/vendor-web-libs.sh   # three / rough / katex into attractive-web/vendor/
+
 # Each build: rewrite CDN tags into android/web
 ../scripts/prepare-android-web.sh
 ```
