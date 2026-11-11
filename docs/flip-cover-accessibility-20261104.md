@@ -1,4 +1,4 @@
-# Android cover keyboard and focus — November 4, 2026
+# Android cover keyboard and focus, November 4, 2026
 
 Current workstream checkpoint, November 5: private signed **1.0.5 (6)** was
 installed and passed native saved-state restoration and immediate no-touch
@@ -23,7 +23,7 @@ second; enabled Lyapunov telemetry can update every 100 ms).
 
 The tracked `android/accessibility.js` adapter keeps native button Space
 activation and target key handlers, excludes hidden panes with `inert` and
-`aria-hidden`, and leaves statistics as a labelled readable group with
+`aria-hidden`, and leaves statistics as a labeled readable group with
 `aria-live="off"`. Explicit user-action announcements remain enabled. At the
 web app's existing compact breakpoint (768 CSS pixels), menu, Lessons and
 Equations are modal dialogs: the background is inert, background shortcuts do
