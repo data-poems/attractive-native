@@ -1,4 +1,4 @@
-# Native restoration instrumentation — November 5, 2026
+# Native restoration instrumentation, November 5, 2026
 
 The current native runtime passes an automated saved-Activity-state and keyboard
 sequence on a dedicated emulator. This adds repeatable evidence to the earlier

@@ -1,4 +1,4 @@
-# Flip cover adaptation — November 4, 2026
+# Flip cover adaptation, November 4, 2026
 
 Status: signed local candidate installed; browser, JVM and selected physical
 cover checks passed. The final artifact cold-launched from the real SystemUI
