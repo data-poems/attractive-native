@@ -23,7 +23,7 @@ Explore the math from several angles:
 - Follow guided lessons about sensitive dependence and Lyapunov exponents
 - Pair attractors with bundled example datasets to see how parameter mappings change the motion
 
-Everything runs on your device. The Android app needs no account or permissions and does not contact a developer server — its WebView blocks network loads. Optional website or support links open only if you tap them. The app contains no ads, analytics, or tracking.
+Everything runs on your device. The Android app needs no account or permissions and does not contact a developer server: its WebView blocks network loads. Optional website or support links open only if you tap them. The app contains no ads, analytics, or tracking.
 
 Made by Luke Steuber.
 
