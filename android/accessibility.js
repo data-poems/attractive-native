@@ -280,6 +280,18 @@
       }
     }, true);
 
+    // Android Back closes the most recently opened pane before it leaves the app.
+    // The always-present desktop sidebar is not something the person opened.
+    // Returns false when nothing is open, so the shell can finish.
+    window.__closeTopPaneForNativeBack = function () {
+      var target = active || order.slice().reverse().find(function (pane) {
+        return pane.element.id !== 'sidebar' || compact.matches;
+      });
+      if (!target || !target.visible || !target.close) return false;
+      target.close.click();
+      return true;
+    };
+
     var stats = document.querySelector('.stats');
     if (stats) {
       stats.setAttribute('role', 'group');

@@ -356,6 +356,26 @@ async function checkCompact(page, width, height) {
     assert.deepEqual(quotaErrors, []);
     results.push({ storage: 'write-only quota failure leaves open/close/focus usable without page errors' });
     await quota.close();
+    for (const [width, height] of [[372, 662], [1200, 900]]) {
+      const back = await browser.newPage({ viewport: { width, height } });
+      await back.goto(origin + '/');
+      await bootstrap(back, false);
+      assert.equal(await back.evaluate(() => window.__closeTopPaneForNativeBack()), false, 'nothing open: Back leaves the app');
+      await openWithSpace(back, 'lessonsBtn');
+      await assertState(back, () => document.getElementById('lessonsPanel').classList.contains('open'));
+      if (width > 768) {
+        // Desktop layout: the lessons panel is not modal, so About can open over it.
+        await openWithSpace(back, 'infoBtn');
+        await assertState(back, () => document.getElementById('modal').classList.contains('active'));
+        assert.equal(await back.evaluate(() => window.__closeTopPaneForNativeBack()), true);
+        await assertState(back, () => !document.getElementById('modal').classList.contains('active'));
+      }
+      assert.equal(await back.evaluate(() => window.__closeTopPaneForNativeBack()), true);
+      await assertState(back, () => !document.getElementById('lessonsPanel').classList.contains('open'));
+      assert.equal(await back.evaluate(() => window.__closeTopPaneForNativeBack()), false, 'all closed: Back leaves the app');
+      await back.close();
+    }
+    results.push({ nativeBack: 'closes the most recent pane, then reports nothing open; default desktop sidebar is not closed' });
     console.log(JSON.stringify({ results, talkBack: 'Intentionally skipped at the user’s request; browser checks only' }, null, 2));
   } finally {
     if (browser) await browser.close();

@@ -137,11 +137,26 @@ class MainActivity : Activity() {
     }
 
     private fun navigateBackOrFinish() {
-        if (::webView.isInitialized && webView.canGoBack()) {
-            webView.goBack()
-        } else {
+        if (!::webView.isInitialized) {
             finish()
+            return
         }
+        if (webView.url?.substringBefore('#') != START_URL) {
+            goBackOrFinish()
+            return
+        }
+        // Back first closes an open panel (controls, equations, lessons, About),
+        // the way a dialog or drawer closes in any Android app.
+        webView.evaluateJavascript(
+            "typeof window.__closeTopPaneForNativeBack === 'function' && " +
+                "window.__closeTopPaneForNativeBack();",
+        ) { closedPane ->
+            if (closedPane != "true" && !isFinishing && !isDestroyed) goBackOrFinish()
+        }
+    }
+
+    private fun goBackOrFinish() {
+        if (webView.canGoBack()) webView.goBack() else finish()
     }
 
     override fun onDestroy() {
