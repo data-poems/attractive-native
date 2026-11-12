@@ -250,6 +250,7 @@ async function checkCompact(page, width, height) {
     fs.symlinkSync(path.join(root, 'attractive-web'), path.join(staging, 'attractive-web'), 'dir');
     fs.copyFileSync(path.join(root, 'scripts/prepare-android-web.sh'), path.join(staging, 'scripts/prepare-android-web.sh'));
     for (const file of ['compact-window.css', 'accessibility.js']) fs.copyFileSync(path.join(root, 'android', file), path.join(staging, 'android', file));
+    fs.symlinkSync(path.join(root, 'android/notices'), path.join(staging, 'android/notices'), 'dir');
     execFileSync('bash', [path.join(staging, 'scripts/prepare-android-web.sh')], { stdio: 'pipe' });
     const assets = path.join(staging, 'android/web');
     server = http.createServer((request, response) => {
