@@ -22,6 +22,9 @@ is not a drop-in replacement.
 ```bash
 # Once, from the repository root: get the web app and its libraries
 git clone https://github.com/lukeslp/attractive-web.git attractive-web
+# 1.0.6 needs five commits on top of master that are not on GitHub (the
+# repository is archived). See "What attractive-web/ is" in the root README:
+# git -C attractive-web am /path/to/sidecar-patches/*.patch
 scripts/vendor-web-libs.sh   # three / rough / katex into attractive-web/vendor/
 
 # Each build: rewrite CDN tags into android/web
@@ -83,6 +86,9 @@ release artifacts plus a debug-keystore **testing** APK for sideload.
 - No Android permissions
 - `blockNetworkLoads = true`
 - External http(s) links open in the system browser only on user gesture
+- Export as PNG saves through the system file picker; no storage permission
+- License texts for the bundled libraries are in `notices/` and shown in the app
+  (About, Open-Source Notices)
 - No cleartext traffic; no backup of private files
 
 ## Automated emulator follow-up
