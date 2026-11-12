@@ -25,6 +25,21 @@
   .stats { bottom: 88px; }
 }
 
+/* Desktop layout in a window too narrow for the whole toolbar beside the open
+   sidebar (a phone in landscape): keep the toolbar inside the window and let it
+   scroll, as it does on phones in portrait. No effect where the toolbar fits. */
+@media (min-width: 769px) {
+  .floating-controls {
+    box-sizing: border-box;
+    max-width: calc(100vw - var(--sidebar-width) - 48px);
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+  }
+  .sidebar.collapsed ~ .floating-controls { max-width: calc(100vw - 48px); }
+  .floating-controls > * { flex-shrink: 0; }
+}
+
 /* Phones in landscape: the readout box (up to seven rows with the Lyapunov rows)
    is taller than the space above the toolbar, so it sits at the top right. */
 @media (max-height: 500px) {
