@@ -25,6 +25,12 @@
   .stats { bottom: 88px; }
 }
 
+/* Phones in landscape: the readout box (up to seven rows with the Lyapunov rows)
+   is taller than the space above the toolbar, so it sits at the top right. */
+@media (max-height: 500px) {
+  .stats { top: 12px; bottom: auto; }
+}
+
 /* Samsung compatibility windows may expose ~598×530 CSS pixels at the physical
    display DPR. Fit short windows without changing display density or page zoom. */
 @media (max-width: 640px) and (max-height: 600px) {
