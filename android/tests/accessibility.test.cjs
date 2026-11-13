@@ -250,6 +250,7 @@ async function checkCompact(page, width, height) {
     fs.symlinkSync(path.join(root, 'attractive-web'), path.join(staging, 'attractive-web'), 'dir');
     fs.copyFileSync(path.join(root, 'scripts/prepare-android-web.sh'), path.join(staging, 'scripts/prepare-android-web.sh'));
     for (const file of ['compact-window.css', 'accessibility.js']) fs.copyFileSync(path.join(root, 'android', file), path.join(staging, 'android', file));
+    fs.symlinkSync(path.join(root, 'android/notices'), path.join(staging, 'android/notices'), 'dir');
     execFileSync('bash', [path.join(staging, 'scripts/prepare-android-web.sh')], { stdio: 'pipe' });
     const assets = path.join(staging, 'android/web');
     server = http.createServer((request, response) => {
@@ -355,6 +356,34 @@ async function checkCompact(page, width, height) {
     assert.deepEqual(quotaErrors, []);
     results.push({ storage: 'write-only quota failure leaves open/close/focus usable without page errors' });
     await quota.close();
+    for (const [width, height] of [[372, 662], [1200, 900]]) {
+      const back = await browser.newPage({ viewport: { width, height } });
+      await back.goto(origin + '/');
+      await bootstrap(back, false);
+      assert.equal(await back.evaluate(() => window.__closeTopPaneForNativeBack()), false, 'nothing open: Back leaves the app');
+      await openWithSpace(back, 'lessonsBtn');
+      await assertState(back, () => document.getElementById('lessonsPanel').classList.contains('open'));
+      if (width > 768) {
+        // Desktop layout: the lessons panel is not modal, so About can open over it.
+        await openWithSpace(back, 'infoBtn');
+        await assertState(back, () => document.getElementById('modal').classList.contains('active'));
+        assert.equal(await back.evaluate(() => window.__closeTopPaneForNativeBack()), true);
+        await assertState(back, () => !document.getElementById('modal').classList.contains('active'));
+      }
+      assert.equal(await back.evaluate(() => window.__closeTopPaneForNativeBack()), true);
+      await assertState(back, () => !document.getElementById('lessonsPanel').classList.contains('open'));
+      assert.equal(await back.evaluate(() => window.__closeTopPaneForNativeBack()), false, 'all closed: Back leaves the app');
+      await back.close();
+    }
+    const icons = await browser.newPage({ viewport: { width: 372, height: 662 } });
+    await icons.goto(origin + '/');
+    await bootstrap(icons, false);
+    assert.equal(await icons.evaluate(() => Array.from(document.querySelectorAll('button svg')).filter(icon => icon.getAttribute('aria-hidden') !== 'true').length), 0, 'button icons are hidden from assistive technology');
+    assert.ok(await icons.evaluate(() => ['#lessonsBtn', '#hamburgerBtn', '#speedDownBtn'].every(sel => document.querySelector(sel).getBoundingClientRect().height >= 48)), 'toolbar and menu targets are at least 48 px');
+    assert.equal(await icons.evaluate(() => document.body.classList.contains('large-text')), false, 'default text size is not marked large');
+    await icons.close();
+    results.push({ adapterMarks: 'button icons hidden from assistive technology; 48 px targets; text-size class off at default size' });
+    results.push({ nativeBack: 'closes the most recent pane, then reports nothing open; default desktop sidebar is not closed' });
     console.log(JSON.stringify({ results, talkBack: 'Intentionally skipped at the user’s request; browser checks only' }, null, 2));
   } finally {
     if (browser) await browser.close();

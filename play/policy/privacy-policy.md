@@ -1,6 +1,6 @@
 # Strangely Attractive Privacy Policy
 
-Effective July 21, 2026
+Effective November 12, 2026
 
 Strangely Attractive (also titled Attractive) is a strange-attractor visualization app by Luke Steuber. This policy covers the iPhone and iPad app, its Home Screen widgets, and the Android app.
 
@@ -20,7 +20,7 @@ The native app and its widgets store visualization preferences and related local
 
 ### Android
 
-The Android app packages its interface, lessons, equations, fonts, and rendering libraries inside the installation. It requests no Android permissions and blocks network loads from its WebView. Visualization preferences, onboarding state, and lesson progress stay in local WebView storage on your device. You can clear that data through the system app-storage controls or by deleting the app.
+The Android app packages its interface, lessons, equations, fonts, and rendering libraries inside the installation. It requests no Android permissions and blocks network loads from its WebView. If you use Export as PNG, the app saves one image of the current picture to the place you choose in Android's Save dialog. The app does not keep a copy and cannot see your other files. Visualization preferences, onboarding state, and lesson progress stay in local WebView storage on your device. You can clear that data through the system app-storage controls or by deleting the app.
 
 ## Network access
 

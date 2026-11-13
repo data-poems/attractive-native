@@ -1,7 +1,8 @@
 /*
  * File Purpose: Hosts Attractive's offline web visualizer in a lifecycle-aware Android WebView.
  * Primary Components: MainActivity, hardened WebView settings, navigation policy, and back handling.
- * Inputs/Outputs: Loads file:///android_asset/index.html; opens user-selected web links externally.
+ * Inputs/Outputs: Loads file:///android_asset/index.html; opens user-selected web links externally;
+ *   saves an exported PNG to a place the person picks in the system file picker.
  */
 
 @file:Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
@@ -31,6 +32,10 @@ import android.webkit.WebViewClient
 import android.window.OnBackInvokedCallback
 import android.window.OnBackInvokedDispatcher
 import android.widget.Toast
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class MainActivity : Activity() {
     private lateinit var webView: WebView
@@ -97,6 +102,9 @@ class MainActivity : Activity() {
         val isDebugBuild = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
         WebView.setWebContentsDebuggingEnabled(isDebugBuild)
         webViewClient = AttractiveWebViewClient()
+        // "Export as PNG" in the web app clicks a download link that carries the image
+        // as a data URL. A WebView has no download manager of its own, so save it here.
+        setDownloadListener { url, _, _, _, _ -> saveExportedImage(url) }
     }
 
     override fun onResume() {
@@ -129,11 +137,26 @@ class MainActivity : Activity() {
     }
 
     private fun navigateBackOrFinish() {
-        if (::webView.isInitialized && webView.canGoBack()) {
-            webView.goBack()
-        } else {
+        if (!::webView.isInitialized) {
             finish()
+            return
         }
+        if (webView.url?.substringBefore('#') != START_URL) {
+            goBackOrFinish()
+            return
+        }
+        // Back first closes an open panel (controls, equations, lessons, About),
+        // the way a dialog or drawer closes in any Android app.
+        webView.evaluateJavascript(
+            "typeof window.__closeTopPaneForNativeBack === 'function' && " +
+                "window.__closeTopPaneForNativeBack();",
+        ) { closedPane ->
+            if (closedPane != "true" && !isFinishing && !isDestroyed) goBackOrFinish()
+        }
+    }
+
+    private fun goBackOrFinish() {
+        if (webView.canGoBack()) webView.goBack() else finish()
     }
 
     override fun onDestroy() {
@@ -237,6 +260,57 @@ class MainActivity : Activity() {
         }
     }
 
+    private fun pendingExportFile() = File(File(cacheDir, EXPORT_CACHE_DIR), "pending.png")
+
+    private fun saveExportedImage(dataUrl: String?) {
+        val png = PngDataUrl.decode(dataUrl)
+        if (png == null) {
+            Toast.makeText(this, R.string.export_failed_message, Toast.LENGTH_LONG).show()
+            return
+        }
+        try {
+            // Kept on disk, not in a field, so the image survives if the system
+            // recreates this Activity while the file picker is open.
+            pendingExportFile().apply { parentFile?.mkdirs() }.writeBytes(png)
+            val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
+            startActivityForResult(
+                Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                    type = "image/png"
+                    putExtra(Intent.EXTRA_TITLE, "strangely-attractive-$stamp.png")
+                },
+                REQUEST_SAVE_EXPORT,
+            )
+        } catch (_: ActivityNotFoundException) {
+            pendingExportFile().delete()
+            Toast.makeText(this, R.string.export_no_picker_message, Toast.LENGTH_LONG).show()
+        } catch (_: java.io.IOException) {
+            Toast.makeText(this, R.string.export_failed_message, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode != REQUEST_SAVE_EXPORT) return
+        val pending = pendingExportFile()
+        val destination = data?.data
+        if (resultCode != RESULT_OK || destination == null) {
+            pending.delete() // The person backed out of the picker; nothing to report.
+            return
+        }
+        val saved = runCatching {
+            contentResolver.openOutputStream(destination)?.use { output ->
+                pending.inputStream().use { input -> input.copyTo(output) }
+            } != null
+        }.getOrDefault(false)
+        pending.delete()
+        Toast.makeText(
+            this,
+            if (saved) R.string.export_saved_message else R.string.export_failed_message,
+            Toast.LENGTH_LONG,
+        ).show()
+    }
+
     private fun openExternalUrl(url: Uri) {
         try {
             startActivity(
@@ -251,5 +325,7 @@ class MainActivity : Activity() {
 
     private companion object {
         const val START_URL = "file:///android_asset/index.html"
+        const val EXPORT_CACHE_DIR = "export"
+        const val REQUEST_SAVE_EXPORT = 4101
     }
 }

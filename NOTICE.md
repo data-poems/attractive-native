@@ -9,6 +9,7 @@ not stored here but is fetched at build time and ends up in a built app.
 
 | Files | Project | License |
 |-------|---------|---------|
+| `android/notices/*.txt` | License texts of three.js, Rough.js, KaTeX and the KaTeX fonts | Each file is the license it reproduces |
 | `android/gradlew`, `android/gradlew.bat`, `android/gradle/wrapper/gradle-wrapper.jar` | Gradle Wrapper (Gradle 8.14.5 distribution pinned in `gradle-wrapper.properties`) | Apache License 2.0 |
 
 ## Fetched at build time and included in the iOS app
@@ -21,14 +22,16 @@ not stored here but is fetched at build time and ends up in a built app.
 ## Fetched at build time and included in the Android app
 
 `scripts/vendor-web-libs.sh` downloads these into `attractive-web/vendor/`, and
-`scripts/prepare-android-web.sh` copies them into the app's assets.
+`scripts/prepare-android-web.sh` copies them into the app's assets. Their
+license texts are stored in `android/notices/` and the same script builds them
+into the page the app shows under About, Open-Source Notices.
 
 | Project | Version | License |
 |---------|---------|---------|
 | [three.js](https://github.com/mrdoob/three.js) | 0.149.0 | MIT, copyright the three.js authors |
 | [Rough.js](https://github.com/rough-stuff/rough) | 4.6.6 | MIT, copyright Preet Shihn |
 | [KaTeX](https://github.com/KaTeX/KaTeX) JavaScript and CSS | 0.16.11 | MIT, copyright Khan Academy and other contributors |
-| KaTeX fonts (WOFF2) | 0.16.11 | SIL Open Font License 1.1 |
+| KaTeX fonts (WOFF2) | 0.16.11 | SIL Open Font License 1.1, copyright Design Science, Inc. and Khan Academy |
 
 The Android app's interface is the separate `attractive-web` web app (see the
 README). It is not part of this repository and is not covered by this

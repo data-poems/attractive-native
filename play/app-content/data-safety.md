@@ -1,6 +1,6 @@
 # Data safety worksheet
 
-These answers cover Android 1.0.0 (1).
+These answers cover Android 1.0.7 (8).
 
 ## Data collection and security
 
@@ -15,9 +15,10 @@ These answers cover Android 1.0.0 (1).
 - The packaged HTML, JavaScript, fonts, and libraries run from Android assets.
 - The app contains no advertising, analytics, crash reporting, or tracking SDK.
 - Visualization preferences, onboarding state, and lesson progress stay in local WebView storage on the device.
+- Export as PNG writes one image to the place the person chooses in the system Save dialog. The app keeps no copy and gets no access to other files.
 - The app does not use a developer-operated server.
-- Privacy policy URL for the Console form: `https://dr.eamer.dev/attractive/privacy.html` (dual-platform page, effective July 21, 2026).
+- Privacy policy URL for the Console form: `https://dr.eamer.dev/attractive/privacy.html` (covers iOS and Android, effective November 12, 2026).
 
-Do not add a data type merely because the interface shows bundled examples labeled climate, heart rate, finance, or similar topics. Those examples contain no user data and do not fetch live records in the Android build.
+Do not add a data type merely because the interface has data themes named climate, heart rate, finance, or similar topics. A theme only renames the equation parameters and loads starting values; the app says so. No theme contains user data or fetches records.
 
 Recheck this worksheet if a future release adds telemetry, remote datasets, cloud sync, accounts, or any SDK that transmits data off the device.

@@ -1,1 +1,1 @@
-Initial Google Play closed test. Explore 25 strange attractors, tune their parameters and visual style, switch between 2D and 3D, read the equations, and work through guided lessons. Everything renders offline on your device.
+First release on Google Play. 25 strange attractors in 2D or 3D, 21 presets, 32 color schemes and 7 drawing styles. Six guided lessons, equation notes for six classic systems and a live Lyapunov exponent readout. Save pictures as PNG. Runs offline with no permissions.
