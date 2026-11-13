@@ -68,3 +68,42 @@
     box-sizing: border-box;
   }
 }
+
+/* Touch targets: at least 48 CSS pixels tall for everything that takes a tap.
+   Sliders keep their thin track; the padding only enlarges the area that
+   responds, and the negative margin keeps the layout where it was. */
+.skip-link, .section-header, .sidebar select, .sidebar button, .toggle-label,
+.mapping-toggle, summary.section-title,
+.lesson-back, .lesson-nav-back, .lesson-nav-next {
+  min-height: 48px;
+  box-sizing: border-box;
+}
+.mapping-toggle, summary.section-title { display: flex; align-items: center; }
+input[type="range"] {
+  box-sizing: content-box;
+  padding: 20px 0;
+  margin: -20px 0;
+  background-clip: content-box;
+}
+.param-info { position: relative; }
+.param-info::after { content: ''; position: absolute; inset: -16px; }
+.modal-content a { display: inline-block; padding: 14px 2px; }
+
+/* Text contrast: the small section titles were #666 on near-black (3.5:1). */
+.section-title, .subsection-title { color: #9a9a9a; }
+
+/* Light drawing styles (Da Vinci, Watercolor) put a pale page behind the
+   see-through menu button and toolbar. Give both the same dark backing they
+   show over the dark styles, so their icons and the speed text keep contrast. */
+#hamburgerBtn, #sidebarToggleBtn { background-color: rgb(9, 34, 34); }
+.floating-controls { background: rgba(4, 4, 4, 0.88); }
+
+/* Large system font (class set by accessibility.js at 1.5x and up): during a
+   lesson the readout box keeps only the rows the lesson talks about, so it does
+   not cover the picture, and goes away when those rows are off. */
+body.large-text.lessons-open .stats .stats-row:nth-child(-n+4) { display: none; }
+body.large-text.lessons-open.no-lyapunov .stats { display: none; }
+/* The color picker's swatch and list share a row; at large text the longest
+   name was cut off. Let the list take the full row under the swatch. */
+body.large-text .select-row { flex-wrap: wrap; }
+body.large-text .select-row select { flex: 1 1 100%; }

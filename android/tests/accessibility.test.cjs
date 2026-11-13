@@ -375,6 +375,14 @@ async function checkCompact(page, width, height) {
       assert.equal(await back.evaluate(() => window.__closeTopPaneForNativeBack()), false, 'all closed: Back leaves the app');
       await back.close();
     }
+    const icons = await browser.newPage({ viewport: { width: 372, height: 662 } });
+    await icons.goto(origin + '/');
+    await bootstrap(icons, false);
+    assert.equal(await icons.evaluate(() => Array.from(document.querySelectorAll('button svg')).filter(icon => icon.getAttribute('aria-hidden') !== 'true').length), 0, 'button icons are hidden from assistive technology');
+    assert.ok(await icons.evaluate(() => ['#lessonsBtn', '#hamburgerBtn', '#speedDownBtn'].every(sel => document.querySelector(sel).getBoundingClientRect().height >= 48)), 'toolbar and menu targets are at least 48 px');
+    assert.equal(await icons.evaluate(() => document.body.classList.contains('large-text')), false, 'default text size is not marked large');
+    await icons.close();
+    results.push({ adapterMarks: 'button icons hidden from assistive technology; 48 px targets; text-size class off at default size' });
     results.push({ nativeBack: 'closes the most recent pane, then reports nothing open; default desktop sidebar is not closed' });
     console.log(JSON.stringify({ results, talkBack: 'Intentionally skipped at the user’s request; browser checks only' }, null, 2));
   } finally {

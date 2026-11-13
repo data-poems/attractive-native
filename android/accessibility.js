@@ -292,6 +292,35 @@
       return true;
     };
 
+    // Icons inside named buttons are decoration; without this TalkBack adds
+    // "unlabelled graphic" after the name of the toggle buttons.
+    Array.prototype.forEach.call(document.querySelectorAll('button svg'), function (icon) {
+      icon.setAttribute('aria-hidden', 'true');
+    });
+
+    // The WebView scales text with the system font size. Mark large text so the
+    // stylesheet can make room (compact-window.css), and track whether the
+    // Lyapunov rows are showing for the lesson readout rule there.
+    function markTextScale() {
+      var probe = document.createElement('span');
+      probe.style.cssText = 'position:absolute;visibility:hidden;font-size:10px';
+      probe.textContent = 'x';
+      document.body.appendChild(probe);
+      var scale = parseFloat(getComputedStyle(probe).fontSize) / 10;
+      probe.remove();
+      document.body.classList.toggle('large-text', scale >= 1.5);
+    }
+    markTextScale();
+    window.addEventListener('resize', markTextScale);
+    var lyapunovRow = document.getElementById('lyapunovRow');
+    function markLyapunov() {
+      document.body.classList.toggle('no-lyapunov', !lyapunovRow || lyapunovRow.style.display === 'none');
+    }
+    markLyapunov();
+    if (lyapunovRow) {
+      new MutationObserver(markLyapunov).observe(lyapunovRow, { attributes: true, attributeFilter: ['style'] });
+    }
+
     var stats = document.querySelector('.stats');
     if (stats) {
       stats.setAttribute('role', 'group');
