@@ -130,13 +130,11 @@ It is a checkout of the `lukeslp/attractive-web` repository on GitHub, branch
 Android 1.0.7 (8) needs seven more commits on top of `1f1cb12` (3D view size,
 lesson layout and content, export of the visible view, corrected data
 wording, 2D fit on narrow screens, 2D drawing at the screen's pixel density,
-tap-to-inspect by touch). `CanonicalWebAssetsTest` fails the build
-on a web copy without them. Those commits are not on GitHub: the
-`lukeslp/attractive-web` repository is archived, which makes it read-only, so
-a branch cannot be pushed to it. They exist as a patch series
-(`git format-patch`) and a Git bundle kept with the 1.0.7 release materials,
-ending at commit `92780b8`. Apply them with `git am` after cloning, or
-un-archive the repository and push the branch.
+tap-to-inspect by touch). They are on the branch `claude/play-fixes-20261112`
+of that repository, ending at commit `92780b8`
+(pull request `lukeslp/attractive-web#1`). `CanonicalWebAssetsTest` fails the
+build on a web copy without them, so check that branch out until it is merged
+into `master`.
 
 That repository is private at the time of writing. The public repository
 [data-poems/attractive](https://github.com/data-poems/attractive) is a later
@@ -153,6 +151,7 @@ Requirements: JDK 21, Android SDK Platform 36 and Build-Tools 36, `python3`,
 ```bash
 # From the repository root. Needs read access to the repository.
 git clone https://github.com/lukeslp/attractive-web.git attractive-web
+git -C attractive-web checkout claude/play-fixes-20261112   # until it is merged into master
 
 # Once: download three.js 0.149.0, Rough.js 4.6.6 and KaTeX 0.16.11
 # (with its WOFF2 fonts) into attractive-web/vendor/.
