@@ -20,7 +20,7 @@ project files the app is named "Attractive".
 |---|---|
 | What it is | Native SwiftUI app for iPhone and iPad with a Home Screen widget, plus an offline Android WebView shell around the separate `attractive-web` web app |
 | Platforms | iOS and iPadOS 17.0 or later; Android 8.0 (API 26) or later, phone and tablet |
-| Versions in this tree | iOS 1.0.2 (15) in `project.yml`; Android 1.0.6 (7) in `android/version.properties` |
+| Versions in this tree | iOS 1.0.2 (15) in `project.yml`; Android 1.0.7 (8) in `android/version.properties` |
 | Release status | iPhone and iPad: [App Store](https://apps.apple.com/us/app/strangely-attractive/id6780700164). Android: signed APK at [dr.eamer.dev/downloads/apps/strangely-attractive](https://dr.eamer.dev/downloads/apps/strangely-attractive/) and in the hosted F-Droid repository. Google Play is in closed testing only (`play/`) |
 | Web app | <https://dr.eamer.dev/attractive/> |
 | Privacy policy | <https://dr.eamer.dev/attractive/privacy.html> (source in `play/policy/`) |
@@ -127,14 +127,15 @@ It is a checkout of the `lukeslp/attractive-web` repository on GitHub, branch
 `scripts/vendor-web-libs.sh` downloads. `master` at `1f1cb12` is what Android
 1.0.1 to 1.0.5 were built from.
 
-Android 1.0.6 (7) needs five more commits on top of `1f1cb12` (3D view size,
+Android 1.0.7 (8) needs seven more commits on top of `1f1cb12` (3D view size,
 lesson layout and content, export of the visible view, corrected data
-wording, 2D fit on narrow screens). `CanonicalWebAssetsTest` fails the build
+wording, 2D fit on narrow screens, 2D drawing at the screen's pixel density,
+tap-to-inspect by touch). `CanonicalWebAssetsTest` fails the build
 on a web copy without them. Those commits are not on GitHub: the
 `lukeslp/attractive-web` repository is archived, which makes it read-only, so
 a branch cannot be pushed to it. They exist as a patch series
-(`git format-patch`) and a Git bundle kept with the 1.0.6 release materials,
-ending at commit `7cf8246`. Apply them with `git am` after cloning, or
+(`git format-patch`) and a Git bundle kept with the 1.0.7 release materials,
+ending at commit `92780b8`. Apply them with `git am` after cloning, or
 un-archive the repository and push the branch.
 
 That repository is private at the time of writing. The public repository

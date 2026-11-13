@@ -22,7 +22,7 @@ is not a drop-in replacement.
 ```bash
 # Once, from the repository root: get the web app and its libraries
 git clone https://github.com/lukeslp/attractive-web.git attractive-web
-# 1.0.6 needs five commits on top of master that are not on GitHub (the
+# 1.0.7 needs seven commits on top of master that are not on GitHub (the
 # repository is archived). See "What attractive-web/ is" in the root README:
 # git -C attractive-web am /path/to/sidecar-patches/*.patch
 scripts/vendor-web-libs.sh   # three / rough / katex into attractive-web/vendor/
