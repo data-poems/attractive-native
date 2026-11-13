@@ -18,7 +18,7 @@ Pick one of 25 systems and let it run. The list starts with the Lorenz butterfly
 
 What you can do
 
-- Watch on a flat canvas, or switch to a 3D view and turn the attractor around with one finger.
+- Watch on a flat canvas, or switch to a 3D view. Turn the picture with one finger and pinch to zoom.
 - Change the parameters of the equations with sliders and see the path respond.
 - Load one of 21 named presets, such as Lorenz Classic, Rössler Funnel or Chua Double Scroll.
 - Choose from 32 color schemes and 7 drawing styles: Clean, Neon, Da Vinci, Chalk, Watercolor, Blueprint and Oscilloscope.
