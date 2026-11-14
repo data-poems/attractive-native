@@ -105,8 +105,11 @@ serialization, uninterrupted foreground transfer, public release or TalkBack.
 environment — `source ~/.appstoreconnect/env.sh` first). Key lanes: `inspect`
 (report versions/build states), `shots` (report screenshot/metadata
 coverage), `upload_listing` (metadata only), `upload_screenshots` (stages
-`screenshots-appstore/` into `build/screenshots/` and uploads). Screenshots
-are pre-rendered attractor cards, not live simulator captures.
+`screenshots-appstore/` into `build/screenshots/` and uploads). The iPhone and
+iPad screenshots are pre-rendered attractor cards, not live simulator captures.
+`screenshots-appstore/iphone-duo-outer/` is the exception: iPhone Duo
+simulator captures from `scripts/capture-duo.sh` (outer or inner display,
+launch arguments only, no taps), which `upload_screenshots` does not upload.
 
 ## Where things live
 

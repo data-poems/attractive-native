@@ -20,7 +20,7 @@ project files the app is named "Attractive".
 |---|---|
 | What it is | Native SwiftUI app for iPhone and iPad with a Home Screen widget, plus an offline Android WebView shell around the separate `attractive-web` web app |
 | Platforms | iOS and iPadOS 17.0 or later; Android 8.0 (API 26) or later, phone and tablet |
-| Versions in this tree | iOS 1.0.2 (15) in `project.yml`; Android 1.0.7 (8) in `android/version.properties` |
+| Versions in this tree | iOS 1.1.0 (16) in `project.yml`; Android 1.0.7 (8) in `android/version.properties` |
 | Release status | iPhone and iPad: [App Store](https://apps.apple.com/us/app/strangely-attractive/id6780700164). Android: signed APK at [dr.eamer.dev/downloads/apps/strangely-attractive](https://dr.eamer.dev/downloads/apps/strangely-attractive/) and in the hosted F-Droid repository. Google Play is in closed testing only (`play/`) |
 | Web app | <https://dr.eamer.dev/attractive/> |
 | Privacy policy | <https://dr.eamer.dev/attractive/privacy.html> (source in `play/policy/`) |
@@ -50,9 +50,13 @@ project files the app is named "Attractive".
   chosen in the widget editor, using the same engine.
 - `android/` is the Android shell (see [android/README.md](android/README.md)).
 - `fastlane/` holds App Store Connect lanes and the App Store listing text.
-  `screenshots-appstore/` holds the listing images, which are rendered by
-  `AttractiveCore/Tests/StoreCardGenerator.swift` rather than captured from a
-  simulator.
+  `screenshots-appstore/` holds the listing images. The iPhone and iPad sets
+  are rendered by `AttractiveCore/Tests/StoreCardGenerator.swift` rather than
+  captured from a simulator. `iphone-duo-outer/` is the exception: simulator
+  captures of the iPhone Duo's outer display, made with
+  `scripts/capture-duo.sh <udid> outer <outdir> [Attractive.app]` (the same
+  script takes `inner` once the simulator is unfolded in Device Hub). The
+  `upload_screenshots` lane does not upload the Duo set.
 - `play/` holds the Google Play listing, policy and checklist material.
 - `docs/` holds dated test records for the Android shell.
 
