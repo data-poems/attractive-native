@@ -64,8 +64,10 @@ struct LaTeXLine: UIViewRepresentable {
     }
 
     func sizeThatFits(_ proposal: ProposedViewSize, uiView: MTMathUILabel, context: Context) -> CGSize? {
-        let fitting = uiView.sizeThatFits(CGSize(width: proposal.width ?? .greatestFiniteMagnitude,
-                                                 height: .greatestFiniteMagnitude))
+        // SwiftMath only reports its typeset size through `intrinsicContentSize`;
+        // on iOS it doesn't override `sizeThatFits(_:)`, whose UIView default
+        // returns the current (zero) bounds and collapsed every line to 0 pt.
+        let fitting = uiView.intrinsicContentSize
         return CGSize(width: proposal.width ?? fitting.width, height: fitting.height)
     }
 }
