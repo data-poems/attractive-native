@@ -15,8 +15,85 @@ struct ContentView: View {
     @State private var hud = PhaseHUDModel()
     @State private var activeSheet: ActiveSheet?
     @State private var inspectorVisible = false
+    /// True on the iPhone Duo's inner display (it has a fold). Drives the
+    /// split layout in `DuoLayout.swift`; false everywhere else.
+    @State private var hasFold = false
+    /// Extra yaw for the 3D view from the optional Duo "fold to turn" input.
+    @State private var hingeYaw: Double = 0
 
     var body: some View {
+        rootLayout
+            .detectsFold($hasFold)
+            .onChange(of: hasFold) { _, fold in
+                // The split shows Tune and Math itself, so close the inspector
+                // and the Math sheet when the Duo opens onto its inner display.
+                if fold {
+                    inspectorVisible = false
+                    if activeSheet == .equations { activeSheet = nil }
+                }
+            }
+            .animation(.easeOut(duration: 0.35), value: settings.hasSeenIntro)
+            // Parameter panel: a docked inspector on iPad (regular width), an
+            // automatic sheet on iPhone (compact width) — SwiftUI adapts it for us.
+            .inspector(isPresented: $inspectorVisible) {
+                ParameterPanel(settings: settings)
+                    .inspectorColumnWidth(min: 280, ideal: 340, max: 460)
+                    .presentationDetents([.medium, .large])
+            }
+            .sheet(item: $activeSheet) { sheet in
+                switch sheet {
+                case .picker:    AttractorPickerSheet(settings: settings)
+                case .equations: EquationView(settings: settings)
+                case .settings:  SettingsSheet(settings: settings)
+                case .lessons:
+                    LessonsHomeView(settings: settings)
+                        .presentationDetents([.medium, .large])
+                }
+            }
+    }
+
+    @ViewBuilder
+    private var rootLayout: some View {
+        if #available(iOS 27.1, *), hasFold {
+            ZStack {
+                DuoSplitLayout(settings: settings, hingeYaw: $hingeYaw,
+                               present: present) {
+                    stage
+                }
+                introLayer
+            }
+        } else {
+            standardLayout
+        }
+    }
+
+    /// The original layout: canvas edge to edge, control bar along the bottom.
+    private var standardLayout: some View {
+        ZStack {
+            stage
+
+            // Layer 3 — bottom control bar.
+            VStack {
+                Spacer()
+                controlBar
+            }
+
+            introLayer
+        }
+    }
+
+    /// Layer 4 — first-launch intro tour (covers everything so the user
+    /// focuses on the overlay; the attractor stays live behind it).
+    @ViewBuilder
+    private var introLayer: some View {
+        if !settings.hasSeenIntro {
+            IntroTour(settings: settings)
+                .transition(.opacity)
+        }
+    }
+
+    /// The attractor (2D canvas or 3D phase space) plus its telemetry HUD.
+    private var stage: some View {
         ZStack {
             // Layer 1 — edge-to-edge attractor canvas.
             GeometryReader { geo in
@@ -32,7 +109,8 @@ struct ContentView: View {
                                        sensitive: settings.sensitiveDependence,
                                        lyapunov: settings.showLyapunov,
                                        hud: hud,
-                                       onInspect: { hud.inspected = $0 })
+                                       onInspect: { hud.inspected = $0 },
+                                       extraYaw: hingeYaw)
                             .id(ViewMode.scene3D)
                     } else {
                         AttractiveCanvas(size: geo.size,
@@ -67,38 +145,8 @@ struct ContentView: View {
                 }
                 .padding(.top, 60)
                 .padding(.horizontal, 16)
+                .foldClearance()
                 .allowsHitTesting(false)
-            }
-
-            // Layer 3 — bottom control bar.
-            VStack {
-                Spacer()
-                controlBar
-            }
-
-            // Layer 4 — first-launch intro tour (covers everything so the user
-            // focuses on the overlay; the attractor stays live behind it).
-            if !settings.hasSeenIntro {
-                IntroTour(settings: settings)
-                    .transition(.opacity)
-            }
-        }
-        .animation(.easeOut(duration: 0.35), value: settings.hasSeenIntro)
-        // Parameter panel: a docked inspector on iPad (regular width), an
-        // automatic sheet on iPhone (compact width) — SwiftUI adapts it for us.
-        .inspector(isPresented: $inspectorVisible) {
-            ParameterPanel(settings: settings)
-                .inspectorColumnWidth(min: 280, ideal: 340, max: 460)
-                .presentationDetents([.medium, .large])
-        }
-        .sheet(item: $activeSheet) { sheet in
-            switch sheet {
-            case .picker:    AttractorPickerSheet(settings: settings)
-            case .equations: EquationView(settings: settings)
-            case .settings:  SettingsSheet(settings: settings)
-            case .lessons:
-                LessonsHomeView(settings: settings)
-                    .presentationDetents([.medium, .large])
             }
         }
     }
@@ -163,6 +211,21 @@ struct ContentView: View {
 
     private func controlButton(system: String, label: String, a11yLabel: String? = nil,
                                action: @escaping () -> Void) -> some View {
+        ControlBarButton(system: system, label: label, a11yLabel: a11yLabel, action: action)
+    }
+}
+
+// MARK: - Control bar button
+
+/// One icon-over-label button in a control bar. Shared by the standard bottom
+/// bar and the Duo split's control pane.
+struct ControlBarButton: View {
+    let system: String
+    let label: String
+    var a11yLabel: String? = nil
+    let action: () -> Void
+
+    var body: some View {
         Button(action: action) {
             VStack(spacing: 5) {
                 Image(systemName: system)
