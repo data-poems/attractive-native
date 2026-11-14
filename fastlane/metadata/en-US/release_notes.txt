@@ -1,1 +1,4 @@
-Finishing a lesson now opens a recap and keeps the final attractor setup on screen. The recap confirms your saved progress and gives you a clear path back to the curriculum.
+On iPhone Duo, the attractor and its controls now share the screen, split along the fold.
+Tune and Math sit beside the attractor, or below it when the phone stands like a laptop.
+New on iPhone Duo: Fold to turn, which turns the 3D view as you move the hinge.
+The equations in Math show again.
