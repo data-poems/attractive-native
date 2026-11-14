@@ -15,6 +15,9 @@ struct PhaseSpaceView: UIViewRepresentable {
     let lyapunov: Bool
     var hud: PhaseHUDModel? = nil
     var onInspect: ((SIMD3<Double>) -> Void)? = nil
+    /// Extra yaw (radians) added on top of the drag-to-rotate camera, from the
+    /// optional iPhone Duo hinge input. Zero everywhere else.
+    var extraYaw: Double = 0
 
     func makeCoordinator() -> PhaseSpaceCoordinator {
         PhaseSpaceCoordinator()
@@ -50,6 +53,7 @@ struct PhaseSpaceView: UIViewRepresentable {
         coord.apply(config: config, speed: speed, zoom: zoom, hue: hue,
                     glow: glow, integrator: integrator, sensitive: sensitive,
                     lyapunov: lyapunov)
+        coord.applyExtraYaw(extraYaw)
         return view
     }
 
@@ -58,5 +62,6 @@ struct PhaseSpaceView: UIViewRepresentable {
         context.coordinator.apply(config: config, speed: speed, zoom: zoom,
                                   hue: hue, glow: glow, integrator: integrator,
                                   sensitive: sensitive, lyapunov: lyapunov)
+        context.coordinator.applyExtraYaw(extraYaw)
     }
 }

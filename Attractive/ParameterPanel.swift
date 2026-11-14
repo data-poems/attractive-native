@@ -6,38 +6,49 @@ import SwiftUI
 /// thresholds from the metadata are drawn on the track and are tappable.
 struct ParameterPanel: View {
     @Bindable var settings: AttractiveSettings
+    /// True inside the iPhone Duo split pane, which supplies its own header
+    /// (with Reset); the panel then contributes only its scrolling content.
+    var embedded = false
 
     private var metadata: AttractorMetadata {
         AttractorMetadataRegistry.metadata(for: settings.attractor)
     }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 22) {
-                    header
-
-                    ForEach(metadata.parameters) { info in
-                        ParameterSliderRow(settings: settings, info: info)
+        if embedded {
+            content
+        } else {
+            NavigationStack {
+                content
+                    .navigationTitle("Tune \(settings.attractor.displayName)")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbarBackground(Color.black, for: .navigationBar)
+                    .toolbarBackground(.visible, for: .navigationBar)
+                    .toolbarColorScheme(.dark, for: .navigationBar)
+                    .toolbar {
+                        ToolbarItem(placement: .topBarLeading) {
+                            Button("Reset") { settings.resetParameters() }
+                                .disabled(!settings.hasParameterOverrides)
+                        }
                     }
-                }
-                .padding(20)
             }
-            .scrollContentBackground(.hidden)
-            .background(Color.black.ignoresSafeArea())
-            .navigationTitle("Tune \(settings.attractor.displayName)")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(Color.black, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Reset") { settings.resetParameters() }
-                        .disabled(!settings.hasParameterOverrides)
-                }
-            }
+            .preferredColorScheme(.dark)
         }
-        .preferredColorScheme(.dark)
+    }
+
+    private var content: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 22) {
+                header
+
+                ForEach(metadata.parameters) { info in
+                    ParameterSliderRow(settings: settings, info: info)
+                }
+            }
+            .padding(20)
+        }
+        .scrollContentBackground(.hidden)
+        .background(Color.black.ignoresSafeArea())
     }
 
     private var header: some View {

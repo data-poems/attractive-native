@@ -5,6 +5,9 @@ import SwiftUI
 /// origin, the dynamical character, and the invariants that quantify its chaos.
 struct EquationView: View {
     @Bindable var settings: AttractiveSettings
+    /// True inside the iPhone Duo split pane, which supplies its own header;
+    /// there is nothing to dismiss, so no navigation bar or Done button.
+    var embedded = false
     @Environment(\.dismiss) private var dismiss
 
     private var metadata: AttractorMetadata {
@@ -16,31 +19,39 @@ struct EquationView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 26) {
-                    systemBlock
-                    parameterLegend
-                    prose("Origin", metadata.origin)
-                    prose("Dynamics", metadata.character)
-                    invariants
-                }
-                .padding(20)
+        if embedded {
+            content
+        } else {
+            NavigationStack {
+                content
+                    .navigationTitle(metadata.id.displayName)
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbarBackground(Color.black, for: .navigationBar)
+                    .toolbarBackground(.visible, for: .navigationBar)
+                    .toolbarColorScheme(.dark, for: .navigationBar)
+                    .toolbar {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button("Done") { dismiss() }
+                        }
+                    }
             }
-            .scrollContentBackground(.hidden)
-            .background(Color.black.ignoresSafeArea())
-            .navigationTitle(metadata.id.displayName)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(Color.black, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") { dismiss() }
-                }
-            }
+            .preferredColorScheme(.dark)
         }
-        .preferredColorScheme(.dark)
+    }
+
+    private var content: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 26) {
+                systemBlock
+                parameterLegend
+                prose("Origin", metadata.origin)
+                prose("Dynamics", metadata.character)
+                invariants
+            }
+            .padding(20)
+        }
+        .scrollContentBackground(.hidden)
+        .background(Color.black.ignoresSafeArea())
     }
 
     // MARK: - Sections

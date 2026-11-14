@@ -239,6 +239,21 @@ final class PhaseSpaceCoordinator: NSObject, SCNSceneRendererDelegate, UIGesture
         cameraOrbit.eulerAngles = e
     }
 
+    /// Extra yaw already folded into `cameraOrbit`. Hinge turns are applied as
+    /// deltas so they add to drag rotation instead of overwriting it.
+    private var appliedExtraYaw: Double = 0
+
+    /// Turn the camera about world up by the change in `yaw` since the last
+    /// call (iPhone Duo "fold to turn"; see `DuoSplitLayout`).
+    func applyExtraYaw(_ yaw: Double) {
+        let delta = yaw - appliedExtraYaw
+        guard delta != 0 else { return }
+        appliedExtraYaw = yaw
+        var e = cameraOrbit.eulerAngles
+        e.y += Float(delta)
+        cameraOrbit.eulerAngles = e
+    }
+
     @objc func handlePinch(_ g: UIPinchGestureRecognizer) {
         if g.state == .changed {
             orbitRadius = max(2, orbitRadius / CGFloat(g.scale))
