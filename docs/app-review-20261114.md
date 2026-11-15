@@ -89,3 +89,10 @@ Thank you.
 Simulators made for these checks: "AttrCheck iPhone 27.2", "AttrCheck iPad
 27.2", "AttrCheck iPhone 26.5", "AttrCheck Duo". All are shut down and safe to
 delete.
+
+## Decision, 14 November 2026 (evening)
+
+Luke: rebuild and resubmit instead of asking for the log. This has happened
+before, and the crash looks like a fluke on the review side. Build 1.1.0 (17)
+is the same source as 16 with only the build number changed. If 17 is
+rejected the same way, ask Apple for the crash log and device model.
