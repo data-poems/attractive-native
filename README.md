@@ -20,7 +20,7 @@ project files the app is named "Attractive".
 |---|---|
 | What it is | Native SwiftUI app for iPhone and iPad with a Home Screen widget, plus an offline Android WebView shell around the separate `attractive-web` web app |
 | Platforms | iOS and iPadOS 17.0 or later; Android 8.0 (API 26) or later, phone and tablet |
-| Versions in this tree | iOS 1.1.0 (16) in `project.yml`; Android 1.0.7 (8) in `android/version.properties` |
+| Versions in this tree | iOS 1.1.0 (17) in `project.yml`; Android 1.0.7 (8) in `android/version.properties` |
 | Release status | iPhone and iPad: [App Store](https://apps.apple.com/us/app/strangely-attractive/id6780700164). Android: signed APK at [dr.eamer.dev/downloads/apps/strangely-attractive](https://dr.eamer.dev/downloads/apps/strangely-attractive/) and in the hosted F-Droid repository. Google Play is in closed testing only (`play/`) |
 | Web app | <https://dr.eamer.dev/attractive/> |
 | Privacy policy | <https://dr.eamer.dev/attractive/privacy.html> (source in `play/policy/`) |
