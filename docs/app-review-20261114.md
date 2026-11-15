@@ -14,6 +14,8 @@ physical devices running the latest OS. No crash log was attached.
 | Uploaded IPA (`sign/out/strangely-attractive-1.1.0-16/export/Attractive.ipa`, SHA-256 40be1866…ac1a) | iphoneos27.2 SDK (24B8118), min iOS 17.0, `UIApplicationSceneManifest` present, entitlements normal, no App Group (none is used), SwiftMath resource bundle present |
 | iOS 27.1 APIs (`ArrangementView`, `ReservedRegion`, `reservedRegions`, `DeviceHinge`) | All **weak-import** in the device binary (`dyld_info -imports`), so they can't break dyld on an older OS |
 | Release build from c2ae6a8, launched on simulators | Runs and draws the intro on iPhone 17 Pro iOS 27.2, iPad Pro 11" iOS 27.2, iPhone 17 Pro **iOS 26.5**, and iPhone Duo (iPhone19-4 runtime). **No crash** |
+| Same Release build on the **open** iPhone Duo simulator (inner display, unfolded by hand in Device Hub, ~21:20 PST) | Eight cold launches, one after a fresh uninstall and install, one straight into Math: still running each time, split layout drawn, no crash report. Seen once and not again: the first launch after unfolding showed the Tune inspector beside a stacked split. The intro card spans the fold over the dimmed control pane (cosmetic) |
+| Luke's iPhone Air, 1.1.0 (16) from TestFlight | Launches normally |
 | SwiftMath version | 1.7.3 (fa8244e) in both the archive and the simulator build |
 | TestFlight crash feedback / diagnostic signatures for build 16 | None |
 | Launch-time force unwraps, `fatalError`, App Group or keychain use | None on the launch path |
