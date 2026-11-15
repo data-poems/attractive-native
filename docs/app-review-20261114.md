@@ -96,3 +96,17 @@ Luke: rebuild and resubmit instead of asking for the log. This has happened
 before, and the crash looks like a fluke on the review side. Build 1.1.0 (17)
 is the same source as 16 with only the build number changed. If 17 is
 rejected the same way, ask Apple for the crash log and device model.
+
+## Outcome, 14 November 2026 (night)
+
+Build 1.1.0 (17) was signed and uploaded at 21:49 PST (delivery
+`9291ea3d-bbf2-4f11-8fb3-08a38347eeb8`, script
+`~/workspace/duo-release-20261114/sign/strangely-attractive-1.1.0-17.sh`),
+attached to 1.1.0 and resubmitted on the same submission. The version is
+Waiting for Review, manual release.
+
+The API refused the resubmission (`PATCH /v1/reviewSubmissions/<id>` with
+`submitted: true` returned 409, "Version is not ready to be submitted yet")
+even after the build was attached. It went through in App Store Connect:
+Update Review on the version page, then Resubmit to App Review on the
+submission.
